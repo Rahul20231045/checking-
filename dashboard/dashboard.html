@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Financial Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh;}
+.page{max-width:940px;margin:0 auto;padding:2rem 1.25rem 3rem;}
+h1{font-size:23px;font-weight:500;color:#1a1a18;margin-bottom:4px;}
+.tagline{font-size:13px;color:#888780;margin-bottom:2rem;}
+.tabs{display:flex;gap:4px;margin-bottom:1.75rem;background:#e8e7e2;border-radius:10px;padding:4px;}
+.tab{flex:1;text-align:center;padding:8px 12px;font-size:14px;font-weight:500;border-radius:7px;cursor:pointer;color:#888780;border:none;background:transparent;transition:all 0.15s;}
+.tab.active{background:#fff;color:#1a1a18;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+.panel{display:none;}.panel.active{display:block;}
+.stitle{font-size:11px;font-weight:500;letter-spacing:0.08em;color:#888780;text-transform:uppercase;margin-bottom:10px;margin-top:1.5rem;}
+.stitle:first-child{margin-top:0;}
+.input-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;}
+.icard{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:13px 15px;}
+.icard label{font-size:12px;color:#888780;display:block;margin-bottom:5px;}
+.icard .irow{display:flex;align-items:center;gap:4px;}
+.icard .pfx{font-size:17px;font-weight:500;color:#5f5e5a;}
+.icard input,.icard select{flex:1;border:none;background:transparent;font-size:17px;font-weight:500;color:#1a1a18;outline:none;width:100%;font-family:inherit;}
+.icard input::-webkit-inner-spin-button{-webkit-appearance:none;}
+.icard select{font-size:14px;cursor:pointer;}
+.icard .hint{font-size:11px;color:#b4b2a9;margin-top:2px;}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;}
+.metric{background:#efefeb;border-radius:8px;padding:12px 14px;}
+.metric.blue{background:#e6f1fb;}.metric.red{background:#faece7;}.metric.green{background:#eaf3de;}.metric.amber{background:#faeeda;}
+.mlabel{font-size:12px;color:#5f5e5a;margin-bottom:4px;}
+.mval{font-size:19px;font-weight:500;color:#1a1a18;}
+.msub{font-size:11px;color:#888780;margin-top:3px;}
+.metric.blue .mlabel,.metric.blue .msub{color:#185FA5;}.metric.blue .mval{color:#0C447C;}.metric.blue .msub{opacity:.7;}
+.metric.red .mlabel,.metric.red .msub{color:#993C1D;}.metric.red .mval{color:#712B13;}.metric.red .msub{opacity:.7;}
+.metric.green .mlabel,.metric.green .msub{color:#3B6D11;}.metric.green .mval{color:#27500A;}.metric.green .msub{opacity:.7;}
+.metric.amber .mlabel,.metric.amber .msub{color:#854F0B;}.metric.amber .mval{color:#633806;}.metric.amber .msub{opacity:.7;}
+.card{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:16px;}
+.chart-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:560px){.chart-2col{grid-template-columns:1fr;}}
+.legend{display:flex;gap:14px;margin-bottom:8px;font-size:11px;color:#888780;flex-wrap:wrap;}
+.legend span{display:flex;align-items:center;gap:5px;}
+.lsq{width:10px;height:10px;border-radius:2px;display:inline-block;}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
+th{text-align:left;color:#888780;font-weight:500;padding:7px 10px;border-bottom:0.5px solid rgba(0,0,0,0.08);}
+td{padding:7px 10px;color:#5f5e5a;border-bottom:0.5px solid rgba(0,0,0,0.06);}
+tr:last-child td{border-bottom:none;}
+th:not(:first-child),td:not(:first-child){text-align:right;}
+.warn{background:#faece7;color:#712B13;border-radius:8px;padding:10px 14px;font-size:13px;margin-top:1rem;display:none;}
+.donut-wrap{position:relative;width:100%;height:170px;}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+.donut-center .dv{font-size:14px;font-weight:500;color:#1a1a18;}
+.donut-center .dl{font-size:10px;color:#888780;}
+/* ===== BUDGET PANEL ===== */
+.b-section{margin-bottom:1.5rem;}
+.b-row{display:flex;align-items:center;gap:10px;background:#fff;border:0.5px solid rgba(0,0,0,0.09);border-radius:10px;padding:11px 14px;margin-bottom:8px;}
+.b-row.disabled{opacity:0.45;pointer-events:none;}
+.b-check{width:18px;height:18px;border-radius:5px;border:1.5px solid #c8c7c0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;background:#fff;transition:all 0.15s;user-select:none;}
+.b-check.on{background:#1a1a18;border-color:#1a1a18;color:#fff;}
+.b-check svg{display:none;}.b-check.on svg{display:block;}
+.b-label{flex:1;font-size:13px;font-weight:500;color:#1a1a18;}
+.b-sublabel{font-size:11px;color:#888780;margin-top:1px;}
+.b-inp{display:flex;align-items:center;gap:3px;background:#f5f4f0;border-radius:7px;padding:5px 9px;}
+.b-inp span{font-size:13px;color:#5f5e5a;}
+.b-inp input{border:none;background:transparent;font-size:14px;font-weight:500;color:#1a1a18;outline:none;width:90px;text-align:right;font-family:inherit;}
+.b-inp input::-webkit-inner-spin-button{-webkit-appearance:none;}
+.budget-bar-wrap{height:18px;background:#e8e7e2;border-radius:6px;overflow:hidden;margin-top:4px;margin-bottom:2px;}
+.budget-bar-seg{height:18px;display:inline-block;vertical-align:top;transition:width 0.4s;}
+.budget-legend-row{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:#5f5e5a;margin-bottom:1rem;}
+.budget-legend-row span{display:flex;align-items:center;gap:5px;}
+.big-num-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1rem;}
+/* Purchase cards */
+.purchase-section{margin-top:1.5rem;}
+.purchase-tabs{display:flex;gap:6px;margin-bottom:1rem;}
+.ptab{padding:6px 14px;font-size:12px;font-weight:500;border-radius:20px;cursor:pointer;border:1.5px solid #e0dfd8;background:#fff;color:#5f5e5a;transition:all 0.15s;}
+.ptab.active{background:#1a1a18;color:#fff;border-color:#1a1a18;}
+.ppanel{display:none;}.ppanel.active{display:block;}
+.purchase-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+.pcard{background:#fff;border:0.5px solid rgba(0,0,0,0.09);border-radius:12px;padding:14px 16px;cursor:pointer;transition:box-shadow 0.15s;}
+.pcard:hover{box-shadow:0 2px 10px rgba(0,0,0,0.08);}
+.pcard .ptag{font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:6px;color:#888780;}
+.pcard .pname{font-size:14px;font-weight:500;color:#1a1a18;margin-bottom:3px;}
+.pcard .pbrand{font-size:11px;color:#888780;margin-bottom:8px;}
+.pcard .pprice{font-size:16px;font-weight:500;color:#0C447C;}
+.pcard .pnote{font-size:11px;color:#888780;margin-top:4px;line-height:1.5;}
+.pcard .pafford{margin-top:8px;font-size:11px;font-weight:500;padding:3px 8px;border-radius:4px;display:inline-block;}
+.pcard .pafford.ok{background:#eaf3de;color:#3B6D11;}
+.pcard .pafford.warn{background:#faeeda;color:#854F0B;}
+.pcard .pafford.no{background:#faece7;color:#712B13;}
+.land-note{background:#e6f1fb;border-radius:8px;padding:12px 14px;font-size:12px;color:#185FA5;line-height:1.7;margin-top:12px;}
+.surplus-ok{color:#3B6D11;font-weight:500;}
+.surplus-warn{color:#854F0B;font-weight:500;}
+.surplus-no{color:#712B13;font-weight:500;}
+
+/* ===== ALLOCATION HINT ===== */
+.alloc-hint{margin-top:5px;font-size:11px;padding:4px 8px;border-radius:5px;display:none;line-height:1.4;}
+.alloc-hint.show{display:block;}
+.alloc-hint.ok{background:#eaf3de;color:#3B6D11;}
+.alloc-hint.warn{background:#faeeda;color:#854F0B;}
+.alloc-hint.over{background:#faece7;color:#712B13;}
+.alloc-hint.neutral{background:#e6f1fb;color:#185FA5;}
+.b-row-inner{flex:1;}
+
+.ready-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-bottom:1.5rem;}
+.check-card{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:14px 16px;}
+.check-card .ctitle{font-size:13px;font-weight:500;color:#1a1a18;margin-bottom:3px;}
+.check-card .cdesc{font-size:12px;color:#888780;margin-bottom:10px;line-height:1.5;}
+.check-val{font-size:18px;font-weight:500;color:#1a1a18;margin-bottom:2px;}
+.check-req{font-size:11px;color:#888780;}
+.check-bar-wrap{height:5px;background:#e8e7e2;border-radius:3px;margin-top:8px;overflow:hidden;}
+.check-bar{height:5px;border-radius:3px;transition:width 0.4s;}
+.score-wrap{display:flex;align-items:center;gap:1.5rem;background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:20px 22px;margin-bottom:1.5rem;flex-wrap:wrap;}
+.score-text h2{font-size:19px;font-weight:500;margin-bottom:4px;}
+.score-text p{font-size:13px;color:#5f5e5a;line-height:1.6;}
+.checklist{display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem;}
+.chk-row{display:flex;align-items:flex-start;gap:10px;background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-radius:10px;padding:12px 14px;}
+.chk-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;margin-top:1px;}
+.chk-icon.ok{background:#eaf3de;color:#3B6D11;}
+.chk-icon.no{background:#faece7;color:#993C1D;}
+.chk-icon.maybe{background:#faeeda;color:#854F0B;}
+.chk-body{flex:1;}
+.chk-title{font-size:13px;font-weight:500;color:#1a1a18;margin-bottom:2px;}
+.chk-detail{font-size:12px;color:#888780;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Financial Dashboard</h1>
+  <p class="tagline">Plan your budget, repayment, and big purchases — all in one place.</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('calc')">Repayment calculator</button>
+    <button class="tab" onclick="switchTab('ready')">Am I ready for a loan?</button>
+    <button class="tab" onclick="switchTab('budget')">Budget planner</button>
+  </div>
+
+  <!-- TAB 1 -->
+  <div class="panel active" id="panel-calc">
+    <p class="stitle">Loan details</p>
+    <div class="input-grid">
+      <div class="icard"><label>Loan amount</label><div class="irow"><span class="pfx">&#8377;</span><input type="number" id="inp-loan" value="5700000" min="0"/></div><div class="hint">total principal</div></div>
+      <div class="icard"><label>Annual interest rate</label><div class="irow"><input type="number" id="inp-rate" value="9" min="0" max="50" step="0.1"/><span class="pfx">%</span></div><div class="hint">per year</div></div>
+      <div class="icard"><label>Monthly payment</label><div class="irow"><span class="pfx">&#8377;</span><input type="number" id="inp-emi" value="70000" min="0"/></div><div class="hint">every month</div></div>
+      <div class="icard"><label>One-time prepayment</label><div class="irow"><span class="pfx">&#8377;</span><input type="number" id="inp-lump" value="0" min="0"/></div><div class="hint">optional lump sum</div></div>
+    </div>
+    <div class="warn" id="warn-box"></div>
+    <p class="stitle">Summary</p>
+    <div class="metrics" id="metrics"></div>
+    <p class="stitle">Balance over time</p>
+    <div class="legend">
+      <span><span class="lsq" style="background:#185FA5;"></span>Loan balance</span>
+      <span><span class="lsq" style="background:#1D9E75;"></span>Cumulative principal paid</span>
+      <span><span class="lsq" style="background:#D85A30;"></span>Cumulative interest paid</span>
+    </div>
+    <div class="card" style="margin-bottom:1rem;">
+      <div style="position:relative;width:100%;height:260px;"><canvas id="chartBalance" role="img" aria-label="Loan balance over time"></canvas></div>
+    </div>
+    <div class="chart-2col" style="margin-bottom:1rem;">
+      <div class="card">
+        <div style="font-size:12px;color:#888780;margin-bottom:10px;">Monthly split — year 1</div>
+        <div class="donut-wrap">
+          <canvas id="chartDonut" role="img" aria-label="Principal vs interest share"></canvas>
+          <div class="donut-center" id="donut-center"><div class="dv">—</div><div class="dl">monthly</div></div>
+        </div>
+        <div class="legend" style="margin-top:8px;margin-bottom:0;">
+          <span><span class="lsq" style="background:#1D9E75;"></span>Principal</span>
+          <span><span class="lsq" style="background:#D85A30;"></span>Interest</span>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;color:#888780;margin-bottom:10px;">Annual principal vs interest</div>
+        <div style="position:relative;width:100%;height:210px;"><canvas id="chartStack" role="img" aria-label="Annual stacked principal and interest"></canvas></div>
+      </div>
+    </div>
+    <p class="stitle">Year-by-year amortization</p>
+    <div class="card" style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Year</th><th>Opening</th><th>Principal paid</th><th>Interest paid</th><th>Closing</th></tr></thead>
+        <tbody id="amort-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 2 -->
+  <div class="panel" id="panel-ready">
+    <p class="stitle">Your financial situation</p>
+    <div class="input-grid">
+      <div class="icard"><label>Loan type</label><div class="irow"><select id="r-type"><option value="home">Home loan</option><option value="car">Car loan</option><option value="personal">Personal loan</option><option value="business">Business loan</option></select></div><div class="hint">affects down payment %</div></div>
+      <div class="icard"><label>Monthly take-home income</label><div class="irow"><span class="pfx">&#8377;</span><input type="number" id="r-income" value="150000" min="0"/></div><div class="hint">after tax</div></div>
+      <div class="icard"><label>Monthly living expenses</label><div class="irow"><span class="pfx">&#8377;</span><input type="number" id="r-expenses" value="60000" min="0"/></div><div class="hint">rent, food, bills etc.</div></div>
+      <div class="icard"><label>Existing EMIs / debts</label><div class="irow"><span class="pfx">&#8377;</span><input type="number" id="r-debt" value="0" min="0"/></div><div class="hint">other loans per month</div></div>
+      <div class="icard"><label>Total savings</label><div class="irow"><span class="pfx">&#8377;</span><input type="number" id="r-savings" value="1500000" min="0"/></div><div class="hint">liquid + investments</div></div>
+      <div class="icard"><label>Asset / property value</label><div class="irow"><span class="pfx">&#8377;</span><input type="number" id="r-asset" value="7500000" min="0"/></div><div class="hint">price of home / car etc.</div></div>
+      <div class="icard"><label>Planned loan amount</label><div class="irow"><span class="pfx">&#8377;</span><input type="number" id="r-loan" value="5700000" min="0"/></div><div class="hint">what you want to borrow</div></div>
+      <div class="icard"><label>Planned monthly EMI</label><div class="irow"><span class="pfx">&#8377;</span><input type="number" id="r-emi" value="70000" min="0"/></div><div class="hint">what you will pay/month</div></div>
+    </div>
+
+    <p class="stitle">Overall readiness score</p>
+    <div class="score-wrap">
+      <canvas id="scoreRing" width="110" height="110" role="img" aria-label="Readiness score out of 100"></canvas>
+      <div class="score-text">
+        <h2 id="score-label">—</h2>
+        <p id="score-desc">—</p>
+      </div>
+    </div>
+
+    <p class="stitle">Key checks</p>
+    <div class="ready-grid" id="ready-grid"></div>
+
+    <p class="stitle">Detailed checklist</p>
+    <div class="checklist" id="checklist"></div>
+
+    <p class="stitle">How much savings should you have before taking this loan?</p>
+    <div class="card" id="savings-breakdown"></div>
+  </div>
+  <!-- TAB 3: BUDGET PLANNER -->
+  <div class="panel" id="panel-budget">
+    <p class="stitle">Your monthly income</p>
+    <div class="input-grid" style="margin-bottom:1rem;">
+      <div class="icard"><label>Monthly take-home salary</label><div class="irow"><span class="pfx">&#8377;</span><input type="number" id="b-salary" value="80000" min="0"/></div><div class="hint">after tax</div></div>
+      <div class="icard"><label>Other income</label><div class="irow"><span class="pfx">&#8377;</span><input type="number" id="b-other" value="0" min="0"/></div><div class="hint">freelance, rent, etc.</div></div>
+    </div>
+
+    <p class="stitle">Budget categories <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#b4b2a9;">— tick to include, enter amount</span></p>
+    <div class="b-section" id="b-categories">
+      <!-- Rendered by JS -->
+    </div>
+
+    <p class="stitle">Summary</p>
+    <div class="big-num-row" id="b-summary"></div>
+    <div class="budget-bar-wrap" id="b-bar" style="margin-bottom:6px;"></div>
+    <div class="budget-legend-row" id="b-legend"></div>
+
+    <p class="stitle">Allocation guide — how much should you spend?</p>
+    <div class="card" id="b-alloc-table" style="overflow-x:auto;display:none;margin-bottom:1rem;">
+      <p style="font-size:12px;color:#888780;margin-bottom:10px;">Based on your income of <strong id="b-income-display">—</strong>, here are the recommended ₹ ranges per category:</p>
+      <table>
+        <thead><tr><th>Category</th><th>Recommended range</th><th>Your amount</th><th>Status</th></tr></thead>
+        <tbody id="b-alloc-body"></tbody>
+      </table>
+    </div>
+
+    <p class="stitle">Big purchase planner</p>
+    <p style="font-size:12px;color:#888780;margin-bottom:12px;">Based on your monthly surplus, see what you can realistically afford. Prices are 2026 India market rates.</p>
+    <div class="purchase-tabs">
+      <button class="ptab active" onclick="switchPTab('bike')">🏍️ Bikes</button>
+      <button class="ptab" onclick="switchPTab('car')">🚗 Cars</button>
+      <button class="ptab" onclick="switchPTab('land')">🏡 Land (Tamil Nadu)</button>
+    </div>
+    <div class="ppanel active" id="pp-bike"><div class="purchase-grid" id="pg-bike"></div></div>
+    <div class="ppanel" id="pp-car"><div class="purchase-grid" id="pg-car"></div></div>
+    <div class="ppanel" id="pp-land">
+      <div class="purchase-grid" id="pg-land"></div>
+      <div class="land-note" id="land-note"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function inr(n){n=Math.round(n);if(Math.abs(n)>=10000000)return'\u20b9'+(n/10000000).toFixed(2)+' Cr';if(Math.abs(n)>=100000)return'\u20b9'+(n/100000).toFixed(2)+'L';return'\u20b9'+n.toLocaleString('en-IN');}
+function inrS(n){n=Math.round(n);if(Math.abs(n)>=10000000)return'\u20b9'+(n/10000000).toFixed(1)+'Cr';if(Math.abs(n)>=100000)return'\u20b9'+(n/100000).toFixed(1)+'L';return'\u20b9'+n.toLocaleString('en-IN');}
+
+function switchTab(t){
+  const tabs=['calc','ready','budget'];
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',i===tabs.indexOf(t)));
+  tabs.forEach(id=>document.getElementById('panel-'+id).classList.toggle('active',id===t));
+  if(t==='budget')renderBudget();
+}
+
+/* ---- CALCULATOR ---- */
+let charts={};
+function simulate(loan,monthly,rate,lump){
+  const r=rate/100/12;
+  let bal=Math.max(0,loan-lump),ti=0,months=0;
+  const bS=[Math.round(bal)],cP=[0],cI=[0],labs=['Now'],yr=[];
+  const eff=bal;
+  while(bal>0.5&&months<600){
+    let yP=0,yI=0,op=bal,broke=false;
+    for(let m=0;m<12&&bal>0.5;m++){
+      const int=bal*r;
+      if(monthly<=int){broke=true;break;}
+      const p=Math.min(monthly-int,bal);
+      yI+=int;yP+=p;ti+=int;bal=Math.max(0,bal-p);months++;
+    }
+    if(broke)break;
+    yr.push({year:yr.length+1,opening:Math.round(op),principal:Math.round(yP),interest:Math.round(yI),closing:Math.round(bal)});
+    labs.push('Yr '+yr.length);bS.push(Math.round(bal));cP.push(Math.round(eff-bal));cI.push(Math.round(ti));
+  }
+  return{months,totalInterest:Math.round(ti),bS,labs,cP,cI,yr};
+}
+
+function renderCalc(){
+  const loan=parseFloat(document.getElementById('inp-loan').value)||0;
+  const rate=parseFloat(document.getElementById('inp-rate').value)||0;
+  const monthly=parseFloat(document.getElementById('inp-emi').value)||0;
+  const lump=parseFloat(document.getElementById('inp-lump').value)||0;
+  const wb=document.getElementById('warn-box');
+  const mInt=Math.round((loan-lump)*rate/100/12);
+  if(monthly<=mInt&&rate>0&&loan>0){
+    wb.style.display='block';
+    wb.textContent='Monthly payment of '+inr(monthly)+' is less than or equal to monthly interest of '+inr(mInt)+'. Increase your payment.';
+    document.getElementById('metrics').innerHTML='';document.getElementById('amort-body').innerHTML='';
+    Object.values(charts).forEach(c=>c.destroy());charts={};return;
+  }
+  wb.style.display='none';
+  const res=simulate(loan,monthly,rate,lump);
+  const yrs=Math.floor(res.months/12),mos=res.months%12;
+  const ts=yrs+'yr'+(yrs!==1?'s':'')+(mos?' '+mos+'mo':'');
+  const ip=Math.round(res.totalInterest/(loan+res.totalInterest)*100);
+  const mP=Math.round(monthly-mInt);
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric blue"><div class="mlabel">Time to close</div><div class="mval">${ts}</div><div class="msub">${res.months} months total</div></div>
+    <div class="metric"><div class="mlabel">Monthly interest (yr 1)</div><div class="mval">${inr(mInt)}</div><div class="msub">${inr(mP)} goes to principal</div></div>
+    <div class="metric red"><div class="mlabel">Total interest</div><div class="mval">${inr(res.totalInterest)}</div><div class="msub">${ip}% of total outflow</div></div>
+    <div class="metric green"><div class="mlabel">Total paid</div><div class="mval">${inr(loan+res.totalInterest)}</div><div class="msub">Principal + interest</div></div>
+    ${lump>0?`<div class="metric amber"><div class="mlabel">Effective loan</div><div class="mval">${inr(loan-lump)}</div><div class="msub">after ${inr(lump)} prepayment</div></div>`:''}
+  `;
+  document.getElementById('donut-center').innerHTML=`<div class="dv">${inrS(monthly)}</div><div class="dl">monthly</div>`;
+  Object.values(charts).forEach(c=>c.destroy());charts={};
+  charts.bal=new Chart(document.getElementById('chartBalance'),{type:'line',data:{labels:res.labs,datasets:[
+    {label:'Balance',data:res.bS,borderColor:'#185FA5',backgroundColor:'rgba(24,95,165,0.07)',fill:true,tension:0.4,pointRadius:2,borderWidth:2},
+    {label:'Principal',data:[0,...res.cP],borderColor:'#1D9E75',backgroundColor:'transparent',fill:false,tension:0.4,pointRadius:0,borderWidth:1.5},
+    {label:'Interest',data:[0,...res.cI],borderColor:'#D85A30',backgroundColor:'transparent',fill:false,tension:0.4,pointRadius:0,borderWidth:1.5,borderDash:[5,3]}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11},color:'#888',maxTicksLimit:12},grid:{display:false}},y:{ticks:{font:{size:11},color:'#888',callback:v=>inrS(v)},grid:{color:'rgba(0,0,0,0.05)'}}}}});
+  charts.donut=new Chart(document.getElementById('chartDonut'),{type:'doughnut',data:{labels:['Principal','Interest'],datasets:[{data:[mP,mInt],backgroundColor:['#1D9E75','#D85A30'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'64%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+inr(ctx.raw)+' ('+Math.round(ctx.raw/monthly*100)+'%)'}}}}});
+  const sy=res.yr.slice(0,20);
+  charts.stack=new Chart(document.getElementById('chartStack'),{type:'bar',data:{labels:sy.map(d=>'Y'+d.year),datasets:[{label:'Principal',data:sy.map(d=>d.principal),backgroundColor:'#1D9E75',stack:'a'},{label:'Interest',data:sy.map(d=>d.interest),backgroundColor:'#D85A30',stack:'a'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{stacked:true,ticks:{font:{size:10},color:'#888'},grid:{display:false}},y:{stacked:true,ticks:{font:{size:10},color:'#888',callback:v=>inrS(v)},grid:{color:'rgba(0,0,0,0.05)'}}}}});
+  document.getElementById('amort-body').innerHTML=res.yr.map(r=>`<tr><td style="font-weight:500;color:#1a1a18;">Year ${r.year}</td><td>${inrS(r.opening)}</td><td style="color:#0F6E56;">${inrS(r.principal)}</td><td style="color:#993C1D;">${inrS(r.interest)}</td><td style="font-weight:500;color:#1a1a18;">${inrS(r.closing)}</td></tr>`).join('');
+}
+['inp-loan','inp-rate','inp-emi','inp-lump'].forEach(id=>document.getElementById(id).addEventListener('input',renderCalc));
+
+/* ---- READINESS ---- */
+const DP_REQ={home:20,car:15,personal:0,business:25};
+const TYPE_LABEL={home:'Home loan',car:'Car loan',personal:'Personal loan',business:'Business loan'};
+const CLOSING_PCT={home:2,car:1,personal:0,business:1};
+let scoreChart=null;
+
+function barColor(ok,warn){return ok?'#1D9E75':warn?'#EF9F27':'#D85A30';}
+
+function renderReady(){
+  const lt=document.getElementById('r-type').value;
+  const income=parseFloat(document.getElementById('r-income').value)||0;
+  const expenses=parseFloat(document.getElementById('r-expenses').value)||0;
+  const existDebt=parseFloat(document.getElementById('r-debt').value)||0;
+  const savings=parseFloat(document.getElementById('r-savings').value)||0;
+  const assetVal=parseFloat(document.getElementById('r-asset').value)||0;
+  const loanAmt=parseFloat(document.getElementById('r-loan').value)||0;
+  const emi=parseFloat(document.getElementById('r-emi').value)||0;
+
+  const dpReqPct=DP_REQ[lt];
+  const dpRequired=assetVal*dpReqPct/100;
+  const actualDP=Math.max(0,assetVal-loanAmt);
+  const dpActPct=assetVal>0?Math.round(actualDP/assetVal*100):0;
+
+  const monthlyFixed=expenses+existDebt;
+  const emergencyNeeded=monthlyFixed*6;
+  const savingsAfterDP=savings-dpRequired;
+
+  const totalEMI=emi+existDebt;
+  const dti=income>0?Math.round(totalEMI/income*100):100;
+  const foir=income>0?Math.round((totalEMI+expenses)/income*100):100;
+  const disposable=income-expenses-existDebt-emi;
+
+  const closingCosts=Math.round(assetVal*CLOSING_PCT[lt]/100);
+  const buf3=emi*3;
+  const recMin=dpRequired+emergencyNeeded+buf3+closingCosts;
+
+  // Checks
+  const dpOk=lt==='personal'||dpActPct>=dpReqPct;
+  const dpWarn=!dpOk&&dpActPct>=dpReqPct*0.7;
+  const emOk=savingsAfterDP>=emergencyNeeded;
+  const emWarn=!emOk&&savingsAfterDP>=emergencyNeeded*0.6;
+  const dtiOk=dti<=40;
+  const dtiWarn=!dtiOk&&dti<=55;
+  const dispOk=disposable>0;
+  const foirOk=foir<=65;
+  const foirWarn=!foirOk&&foir<=75;
+  const savOk=savings>=recMin;
+  const savWarn=!savOk&&savings>=recMin*0.7;
+  const existOk=existDebt<income*0.25;
+  const existWarn=!existOk&&existDebt<income*0.35;
+
+  let score=0;
+  if(dpOk)score+=20;else if(dpWarn)score+=10;
+  if(emOk)score+=20;else if(emWarn)score+=10;
+  if(dtiOk)score+=20;else if(dtiWarn)score+=10;
+  if(dispOk)score+=20;
+  if(foirOk)score+=10;else if(foirWarn)score+=5;
+  if(savOk)score+=10;else if(savWarn)score+=5;
+
+  const scoreColor=score>=75?'#1D9E75':score>=50?'#BA7517':'#D85A30';
+  const scoreLabel=score>=75?'Ready to borrow':score>=50?'Almost ready':'Not ready yet';
+  const scoreDesc=score>=75
+    ?'Your finances look solid. You have a sufficient down payment, emergency cushion, and a manageable debt load. Go ahead with confidence.'
+    :score>=50
+    ?'You are close, but one or two areas need strengthening. Address the flagged items below before signing.'
+    :'Consider building your savings or reducing existing debt first. Taking a loan now may put you under financial stress.';
+
+  document.getElementById('score-label').textContent=scoreLabel;
+  document.getElementById('score-desc').textContent=scoreDesc;
+
+  if(scoreChart)scoreChart.destroy();
+  const rc=document.getElementById('scoreRing');
+  scoreChart=new Chart(rc,{type:'doughnut',data:{datasets:[{data:[score,100-score],backgroundColor:[scoreColor,'#e8e7e2'],borderWidth:0}]},options:{responsive:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+  setTimeout(()=>{
+    const ctx=rc.getContext('2d');
+    ctx.save();
+    ctx.font='bold 22px Segoe UI,system-ui,sans-serif';ctx.fillStyle=scoreColor;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(score,55,50);
+    ctx.font='11px Segoe UI,system-ui,sans-serif';ctx.fillStyle='#888780';
+    ctx.fillText('/ 100',55,68);ctx.restore();
+  },350);
+
+  // Key cards
+  document.getElementById('ready-grid').innerHTML=`
+    <div class="check-card">
+      <div class="ctitle">Down payment</div>
+      <div class="cdesc">Upfront cash. Reduces loan size and proves financial discipline to lenders.</div>
+      <div class="check-val">${lt==='personal'?'Not required':inrS(actualDP)}</div>
+      <div class="check-req">${lt==='personal'?'Personal loans need no collateral':'Need '+dpReqPct+'% of asset = '+inrS(dpRequired)}</div>
+      <div class="check-bar-wrap"><div class="check-bar" style="width:${Math.min(100,lt==='personal'?100:dpRequired>0?dpActPct/dpReqPct*100:100)}%;background:${barColor(dpOk,dpWarn)};"></div></div>
+    </div>
+    <div class="check-card">
+      <div class="ctitle">Emergency fund</div>
+      <div class="cdesc">6 months of expenses kept liquid, separate from down payment funds.</div>
+      <div class="check-val">${inrS(savingsAfterDP)}</div>
+      <div class="check-req">Need at least ${inrS(emergencyNeeded)}</div>
+      <div class="check-bar-wrap"><div class="check-bar" style="width:${Math.min(100,emergencyNeeded>0?savingsAfterDP/emergencyNeeded*100:100)}%;background:${barColor(emOk,emWarn)};"></div></div>
+    </div>
+    <div class="check-card">
+      <div class="ctitle">Debt-to-income ratio</div>
+      <div class="cdesc">All EMIs as % of income. Banks prefer below 40–50%.</div>
+      <div class="check-val">${dti}%</div>
+      <div class="check-req">Recommended: below 40%</div>
+      <div class="check-bar-wrap"><div class="check-bar" style="width:${Math.min(100,dti)}%;background:${barColor(dtiOk,dtiWarn)};"></div></div>
+    </div>
+    <div class="check-card">
+      <div class="ctitle">Monthly disposable income</div>
+      <div class="cdesc">What remains after all expenses and EMIs. Must be positive.</div>
+      <div class="check-val">${inrS(disposable)}</div>
+      <div class="check-req">Should be greater than zero</div>
+      <div class="check-bar-wrap"><div class="check-bar" style="width:${Math.min(100,Math.max(0,income>0?disposable/income*100:0))}%;background:${dispOk?'#1D9E75':'#D85A30'};"></div></div>
+    </div>
+  `;
+
+  // Checklist
+  const checks=[
+    {ok:dpOk,warn:dpWarn,title:'Down payment is ready',detail:lt==='personal'?'Personal loans typically require no down payment or collateral.':'You need '+dpReqPct+'% of '+inrS(assetVal)+' = '+inrS(dpRequired)+'. Your down payment: '+inrS(actualDP)+' ('+dpActPct+'%).'},
+    {ok:emOk,warn:emWarn,title:'6-month emergency fund is intact',detail:'After paying the down payment, you should still have '+inrS(emergencyNeeded)+' liquid (6 months x '+inrS(monthlyFixed)+'/month). Remaining savings: '+inrS(savingsAfterDP)+'.'},
+    {ok:dtiOk,warn:dtiWarn,title:'Debt-to-income ratio below 40%',detail:'Total EMI ('+inrS(totalEMI)+') is '+dti+'% of income ('+inrS(income)+'). Most Indian banks cap approval at 40–50% DTI.'},
+    {ok:dispOk,warn:false,title:'Positive monthly cashflow after EMI',detail:'Income '+inrS(income)+' minus expenses '+inrS(expenses)+' minus existing debt '+inrS(existDebt)+' minus new EMI '+inrS(emi)+' = '+inrS(disposable)+'. This must stay positive.'},
+    {ok:foirOk,warn:foirWarn,title:'Fixed obligation ratio (FOIR) below 65%',detail:'FOIR = (all EMIs + expenses) / income = '+foir+'%. Indian lenders typically allow up to 60–70%. High FOIR may reduce loan eligibility.'},
+    {ok:existOk,warn:existWarn,title:'Existing debt is low (below 25% of income)',detail:'Your existing EMIs are '+inrS(existDebt)+'/month = '+Math.round(existDebt/Math.max(income,1)*100)+'% of income. Try to reduce this below 25% before adding a new loan.'},
+    {ok:savOk,warn:savWarn,title:'Total savings meet the recommended minimum',detail:'Recommended minimum: '+inrS(recMin)+' (down payment + emergency fund + 3-EMI buffer + closing costs). Your savings: '+inrS(savings)+'.'},
+  ];
+  document.getElementById('checklist').innerHTML=checks.map(c=>`
+    <div class="chk-row">
+      <div class="chk-icon ${c.ok?'ok':c.warn?'maybe':'no'}">${c.ok?'&#10003;':c.warn?'~':'&#10007;'}</div>
+      <div class="chk-body"><div class="chk-title">${c.title}</div><div class="chk-detail">${c.detail}</div></div>
+    </div>
+  `).join('');
+
+  // Savings breakdown table
+  const rows=[];
+  if(dpRequired>0)rows.push({label:`Down payment (${dpReqPct}%)`,val:dpRequired,why:'Upfront payment to qualify for the loan'});
+  rows.push({label:'Emergency fund (6 months expenses)',val:emergencyNeeded,why:'Buffer for job loss, medical, or unexpected costs'});
+  rows.push({label:'EMI buffer (3 months)',val:buf3,why:'Pay EMIs even if income is delayed'});
+  if(closingCosts>0)rows.push({label:`Closing / registration costs (~${CLOSING_PCT[lt]}%)`,val:closingCosts,why:'Stamp duty, processing fee, legal charges'});
+
+  const met=savings>=recMin;
+  document.getElementById('savings-breakdown').innerHTML=`
+    <p style="font-size:13px;color:#5f5e5a;line-height:1.7;margin-bottom:14px;">For a <strong>${TYPE_LABEL[lt]}</strong> of <strong>${inrS(loanAmt)}</strong>, here is what you should have saved <em>before</em> signing the loan agreement:</p>
+    <table>
+      <thead><tr><th>Component</th><th>Amount needed</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        ${rows.map(r=>`<tr><td>${r.label}</td><td style="font-weight:500;color:#1a1a18;">${inrS(r.val)}</td><td style="font-size:12px;">${r.why}</td></tr>`).join('')}
+        <tr style="border-top:1px solid rgba(0,0,0,0.1);">
+          <td style="font-weight:500;color:#1a1a18;">Total recommended minimum</td>
+          <td style="font-weight:500;font-size:16px;color:#0C447C;">${inrS(recMin)}</td>
+          <td style="font-size:12px;font-weight:500;color:${met?'#3B6D11':'#993C1D'};">${met?'&#10003; You meet this':'&#10007; Short by '+inrS(recMin-savings)}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:14px;padding:10px 14px;background:#e6f1fb;border-radius:8px;font-size:12px;color:#185FA5;line-height:1.6;">
+      <strong>Tips:</strong> A credit score above 750 gets you better rates. Having savings <em>beyond</em> the minimum gives you negotiating power. Avoid taking a loan if your DTI would exceed 50% — lenders may reject it or charge a premium.
+    </div>
+  `;
+}
+
+['r-type','r-income','r-expenses','r-debt','r-savings','r-asset','r-loan','r-emi'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener(el.tagName==='SELECT'?'change':'input',renderReady);
+});
+
+
+/* ===== BUDGET PLANNER ===== */
+const BUDGET_CATS = [
+  {id:'rent',     label:'Rent / Home loan EMI',        sub:'Monthly housing cost',           color:'#185FA5', defaultAmt:15000, defaultOn:true},
+  {id:'food',     label:'Food & Groceries',             sub:'Meals, provisions, dining out',  color:'#1D9E75', defaultAmt:8000,  defaultOn:true},
+  {id:'transport',label:'Transport / Fuel',             sub:'Petrol, bus, auto, cab',         color:'#D85A30', defaultAmt:4000,  defaultOn:true},
+  {id:'bills',    label:'Utilities & Bills',            sub:'Electricity, internet, mobile',  color:'#9B59B6', defaultAmt:3000,  defaultOn:true},
+  {id:'savings',  label:'Savings / FD / RD',            sub:'Short-term savings goal',        color:'#27AE60', defaultAmt:10000, defaultOn:true},
+  {id:'invest',   label:'Investments (MF / SIP / Gold)',sub:'Long-term wealth building',      color:'#F39C12', defaultAmt:5000,  defaultOn:false},
+  {id:'parents',  label:'Money to Parents',             sub:'Monthly family support',         color:'#E74C3C', defaultAmt:5000,  defaultOn:false},
+  {id:'medical',  label:'Medical / Insurance',          sub:'Health, term insurance premiums',color:'#1ABC9C', defaultAmt:2000,  defaultOn:false},
+  {id:'emi',      label:'Existing Loan EMIs',           sub:'Other loans per month',          color:'#8E44AD', defaultAmt:0,     defaultOn:false},
+  {id:'edu',      label:'Education / Courses',          sub:"Learning, kids' school fees",    color:'#2980B9', defaultAmt:0,     defaultOn:false},
+  {id:'leisure',  label:'Entertainment & Leisure',      sub:'OTT, outings, hobbies',          color:'#E67E22', defaultAmt:2000,  defaultOn:false},
+  {id:'misc',     label:'Miscellaneous',                sub:'Clothing, gifts, emergencies',   color:'#7F8C8D', defaultAmt:2000,  defaultOn:false},
+];
+
+// Separate state object — never re-rendered from scratch so inputs keep focus
+let bState = {};
+BUDGET_CATS.forEach(c => { bState[c.id] = {on: c.defaultOn, amt: c.defaultAmt}; });
+
+// Recommended allocation % ranges per category (of total income)
+const ALLOC_GUIDE = {
+  rent:      {min:20, max:35, tip:'Keep housing below 30% of income. Above 35% leaves little room for savings.'},
+  food:      {min:10, max:20, tip:'10–20% is ideal. Below 10% may mean skimping; above 20% review dining habits.'},
+  transport: {min:5,  max:15, tip:'5–15% is healthy. Consider public transport if this exceeds 15%.'},
+  bills:     {min:3,  max:10, tip:'3–10% is typical for utilities. Review plans if over 10%.'},
+  savings:   {min:10, max:20, tip:'Aim for at least 10–20% in savings. Great habit for financial security!'},
+  invest:    {min:5,  max:20, tip:'5–20% in investments builds long-term wealth. Start small, increase yearly.'},
+  parents:   {min:0,  max:15, tip:'Family support up to 15% is common. Balance with your own savings goals.'},
+  medical:   {min:2,  max:7,  tip:'2–7% is a healthy buffer for health & insurance. Never skip this category.'},
+  emi:       {min:0,  max:20, tip:'Keep all EMIs under 40% of income (including rent). Above 20% needs caution.'},
+  edu:       {min:0,  max:10, tip:'Invest in learning — up to 10% is reasonable and pays long-term dividends.'},
+  leisure:   {min:3,  max:10, tip:'Allow yourself 3–10% for enjoyment. Cutting this entirely causes burnout.'},
+  misc:      {min:3,  max:8,  tip:'Always keep 3–8% for surprises. Life is unpredictable!'},
+};
+
+function getAllocHint(catId, amt, total) {
+  const guide = ALLOC_GUIDE[catId];
+  if (!guide || total <= 0) return null;
+  const pct = (amt / total) * 100;
+  const minA = total * guide.min / 100;
+  const maxA = total * guide.max / 100;
+  const pctStr = pct.toFixed(1) + '%';
+  const rangeStr = guide.min + '–' + guide.max + '%';
+  if (pct > guide.max) {
+    return {cls:'over', text:`⚠ ${pctStr} of income — above recommended ${rangeStr}. ${guide.tip}`};
+  } else if (guide.min > 0 && pct < guide.min) {
+    return {cls:'warn', text:`↑ ${pctStr} of income — below recommended ${rangeStr}. ${guide.tip}`};
+  } else {
+    return {cls:'ok', text:`✓ ${pctStr} of income — within recommended ${rangeStr}. ${guide.tip}`};
+  }
+}
+
+// Build the category rows ONCE on init; event delegation handles all inputs
+function initBCats() {
+  const cont = document.getElementById('b-categories');
+  cont.innerHTML = BUDGET_CATS.map(c => `
+    <div class="b-row" id="brow-${c.id}" style="opacity:${c.defaultOn ? 1 : 0.45}">
+      <div class="b-check ${c.defaultOn ? 'on' : ''}" id="bchk-${c.id}" onclick="toggleCat(this.id.replace('bchk-',''))">
+        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="b-row-inner">
+        <div class="b-label">${c.label}</div>
+        <div class="b-sublabel">${c.sub}</div>
+        <div class="alloc-hint" id="bhint-${c.id}"></div>
+      </div>
+      <div class="b-inp">
+        <span>&#8377;</span>
+        <input type="number" min="0" id="bamt-${c.id}" data-cat="${c.id}" value="${c.defaultAmt}" />
+      </div>
+    </div>
+  `).join('');
+
+  // Single delegated listener - avoids broken single-quote-in-attribute issues
+  cont.addEventListener('input', function(e) {
+    const catId = e.target.dataset && e.target.dataset.cat;
+    if (catId) {
+      bState[catId].amt = parseFloat(e.target.value) || 0;
+      calcBudget();
+    }
+  });
+}
+
+function toggleCat(id) {
+  bState[id].on = !bState[id].on;
+  const chk = document.getElementById('bchk-'+id);
+  const row = document.getElementById('brow-'+id);
+  if(chk) chk.classList.toggle('on', bState[id].on);
+  if(row) row.style.opacity = bState[id].on ? '1' : '0.4';
+  calcBudget();
+}
+
+function calcBudget() {
+  const salary = parseFloat(document.getElementById('b-salary').value)||0;
+  const other  = parseFloat(document.getElementById('b-other').value)||0;
+  const total  = salary + other;
+
+  let spent = 0;
+  const active = BUDGET_CATS.filter(c => bState[c.id].on);
+  active.forEach(c => { spent += bState[c.id].amt; });
+
+  const surplus    = total - spent;
+  const savingsAmt = bState['savings'].on ? bState['savings'].amt : 0;
+  const investAmt  = bState['invest'].on  ? bState['invest'].amt  : 0;
+  const surpCls    = surplus > 0 ? 'green' : 'red';
+
+  // Update allocation hints for every active category
+  BUDGET_CATS.forEach(c => {
+    const hintEl = document.getElementById('bhint-' + c.id);
+    if (!hintEl) return;
+    if (!bState[c.id].on || total <= 0) { hintEl.className = 'alloc-hint'; return; }
+    const hint = getAllocHint(c.id, bState[c.id].amt, total);
+    if (hint) {
+      hintEl.className = 'alloc-hint show ' + hint.cls;
+      hintEl.textContent = hint.text;
+    } else {
+      hintEl.className = 'alloc-hint';
+    }
+  });
+
+  document.getElementById('b-summary').innerHTML = `
+    <div class="metric blue">
+      <div class="mlabel">Total Income</div>
+      <div class="mval">${inr(total)}</div>
+      <div class="msub">per month</div>
+    </div>
+    <div class="metric red">
+      <div class="mlabel">Total Outflow</div>
+      <div class="mval">${inr(spent)}</div>
+      <div class="msub">${total>0?Math.round(spent/total*100):0}% of income</div>
+    </div>
+    <div class="metric ${surpCls}">
+      <div class="mlabel">Monthly Surplus</div>
+      <div class="mval">${inr(surplus)}</div>
+      <div class="msub">${surplus>=0?'available to save/invest':'⚠ over budget!'}</div>
+    </div>
+    <div class="metric amber">
+      <div class="mlabel">Savings + Invest</div>
+      <div class="mval">${inr(savingsAmt+investAmt)}</div>
+      <div class="msub">${total>0?Math.round((savingsAmt+investAmt)/total*100):0}% of income</div>
+    </div>
+  `;
+
+  // Stacked bar
+  let segs = '';
+  active.forEach(c => {
+    const cat = BUDGET_CATS.find(x => x.id===c.id);
+    const pct = total > 0 ? Math.min(100, bState[c.id].amt / total * 100) : 0;
+    segs += `<div class="budget-bar-seg" style="width:${pct.toFixed(2)}%;background:${cat.color};" title="${cat.label}: ${inr(bState[c.id].amt)}"></div>`;
+  });
+  const remPct = total > 0 ? Math.max(0, (total-spent)/total*100) : 100;
+  segs += `<div class="budget-bar-seg" style="width:${remPct.toFixed(2)}%;background:#d0eedb;" title="Surplus: ${inr(surplus)}"></div>`;
+  document.getElementById('b-bar').innerHTML = segs;
+
+  // Legend
+  let leg = active.map(c => {
+    const cat = BUDGET_CATS.find(x => x.id===c.id);
+    return `<span><span style="width:10px;height:10px;border-radius:2px;display:inline-block;background:${cat.color};"></span>${cat.label} (${inr(bState[c.id].amt)})</span>`;
+  }).join('');
+  leg += `<span><span style="width:10px;height:10px;border-radius:2px;display:inline-block;background:#d0eedb;border:1px solid #aee;"></span>Surplus (${inr(surplus)})</span>`;
+  document.getElementById('b-legend').innerHTML = leg;
+
+  // Allocation guidance table
+  const allocTable = document.getElementById('b-alloc-table');
+  const incDisp = document.getElementById('b-income-display');
+  if (incDisp) incDisp.textContent = inr(total);
+  if (allocTable && active.length > 0 && total > 0) {
+    allocTable.style.display = '';
+    const rows = active.map(c => {
+      const guide = ALLOC_GUIDE[c.id];
+      if (!guide) return '';
+      const recMinAmt = Math.round(total * guide.min / 100);
+      const recMaxAmt = Math.round(total * guide.max / 100);
+      const actual    = bState[c.id].amt;
+      const pct       = (actual/total*100).toFixed(1);
+      const isOver    = actual > total*guide.max/100;
+      const isLow     = guide.min > 0 && actual < total*guide.min/100;
+      const status    = isOver ? '⚠ High' : isLow ? '↑ Low' : '✓ Good';
+      const color     = isOver ? '#993C1D' : isLow ? '#854F0B' : '#3B6D11';
+      const bgColor   = isOver ? '#fde8e0' : isLow ? '#fef3e0' : '#ecf7e4';
+      return `<tr>
+        <td style="font-weight:500;color:#1a1a18;">${BUDGET_CATS.find(x=>x.id===c.id).label}</td>
+        <td style="color:#0C447C;">${inrS(recMinAmt)}–${inrS(recMaxAmt)} <span style="color:#b4b2a9;font-size:10px;">(${guide.min}–${guide.max}%)</span></td>
+        <td style="font-weight:500;">${inrS(actual)} <span style="color:#888780;font-size:10px;">(${pct}%)</span></td>
+        <td><span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;background:${bgColor};color:${color};">${status}</span></td>
+      </tr>`;
+    }).filter(Boolean).join('');
+    document.getElementById('b-alloc-body').innerHTML = rows;
+  } else if (allocTable) {
+    allocTable.style.display = 'none';
+  }
+
+  renderPurchaseCards(surplus, total);
+}
+
+function renderBudget() { calcBudget(); }
+
+/* ===== PURCHASE DATA ===== */
+const BIKES = [
+  // Entry
+  {tag:'Entry',   name:'Hero Splendor Plus',          brand:'Hero MotoCorp',  price:76177,  note:'Best mileage ~70 kmpl. Ideal daily commuter.', where:'Hero showrooms across Tamil Nadu'},
+  {tag:'Entry',   name:'Bajaj Platina 110',            brand:'Bajaj',          price:73000,  note:'Super fuel-efficient 70 kmpl. Great value.', where:'Bajaj dealers, all cities TN'},
+  {tag:'Entry',   name:'TVS Radeon 110',               brand:'TVS',            price:78000,  note:'Stylish commuter. Comfortable for daily use.', where:'TVS dealers across Tamil Nadu'},
+  {tag:'Entry',   name:'Honda CB Shine 125',           brand:'Honda',          price:87000,  note:'Premium commuter. Trusted Honda reliability.', where:'Honda dealers in Chennai, CBE, Madurai'},
+  // Java
+  {tag:'Mid',     name:'Jawa 42 Bobber',               brand:'Jawa',           price:175000, note:'Retro bobber styling. 293cc, smooth cruiser ride.', where:'Jawa showrooms in Chennai & Coimbatore'},
+  {tag:'Mid',     name:'Jawa 42 FJ',                   brand:'Jawa',           price:155000, note:'Classic retro look. 293cc single cyl. Easy to ride.', where:'Jawa showrooms in Chennai & Coimbatore'},
+  {tag:'Mid',     name:'Jawa Perak',                   brand:'Jawa',           price:195000, note:'Iconic bobber, long seat, 334cc. Head-turner.', where:'Jawa showrooms, Chennai'},
+  // Mid
+  {tag:'Mid',     name:'Bajaj Pulsar N150',            brand:'Bajaj',          price:115000, note:'Updated street fighter. Sporty & popular.', where:'Bajaj dealers across Tamil Nadu'},
+  {tag:'Mid',     name:'Yamaha FZ-S Fi V4',            brand:'Yamaha',         price:116000, note:'Fuel injected, great street fighter looks.', where:'Yamaha dealers, Chennai & Coimbatore'},
+  {tag:'Mid',     name:'Royal Enfield Bullet 350',     brand:'Royal Enfield',  price:164000, note:'Iconic heritage. Excellent highway comfort.', where:'RE showrooms in Chennai, Madurai, Trichy'},
+  {tag:'Mid',     name:'Yamaha MT-15 V2.0',            brand:'Yamaha',         price:159000, note:'Sporty naked bike. Excellent performance.', where:'Yamaha dealers, major cities TN'},
+  // Premium
+  {tag:'Premium', name:'KTM 390 Duke',                 brand:'KTM',            price:277268, note:'Performance naked street fighter. Very popular.', where:'KTM dealers in Chennai, Coimbatore'},
+  {tag:'Premium', name:'Royal Enfield Himalayan 450',  brand:'Royal Enfield',  price:295000, note:'Adventure tourer. Great for long highway trips.', where:'RE showrooms across Tamil Nadu'},
+  {tag:'Premium', name:'Bajaj Dominar 400',            brand:'Bajaj',          price:235000, note:'Sport tourer. Powerful, comfortable & loaded.', where:'Bajaj dealers in Chennai & Coimbatore'},
+];
+
+const CARS = [
+  {tag:'Budget',   name:'Maruti S-Presso',              brand:'Maruti Suzuki',  price:350000,  note:"India's most affordable micro-SUV styled car.",   where:'Arena dealers, all cities TN'},
+  {tag:'Budget',   name:'Maruti Alto K10',              brand:'Maruti Suzuki',  price:370000,  note:'Lowest-priced full car. Great city runabout.',    where:'Arena dealers, all cities TN'},
+  {tag:'Budget',   name:'Tata Tiago',                   brand:'Tata Motors',    price:460000,  note:'5-star safety, modern features at low price.',    where:'Tata showrooms across Tamil Nadu'},
+  {tag:'Budget',   name:'Maruti WagonR',                brand:'Maruti Suzuki',  price:499000,  note:'Tall-boy design. Spacious & best CNG option.',    where:'Arena dealers statewide'},
+  {tag:'Mid',      name:'Maruti Swift',                 brand:'Maruti Suzuki',  price:579000,  note:'Peppy hatchback. High resale value.',             where:'Arena & Nexa dealers statewide'},
+  {tag:'Mid',      name:'Tata Punch',                   brand:'Tata Motors',    price:565000,  note:'Micro-SUV, 5-star safety. Very popular now.',     where:'Tata showrooms across Tamil Nadu'},
+  {tag:'Mid',      name:'Maruti FRONX',                 brand:'Maruti/Nexa',    price:685000,  note:'Compact crossover. Fuel efficient & stylish.',    where:'Nexa dealerships, major cities'},
+  {tag:'Mid',      name:'Hyundai Creta',                brand:'Hyundai',        price:1079000, note:"Best-selling SUV. Great features & comfort.",     where:'Hyundai showrooms statewide'},
+  {tag:'Premium',  name:'Tata Sierra',                  brand:'Tata Motors',    price:1149000, note:'Iconic reborn SUV. Modern tech & safety.',        where:'Tata showrooms in Chennai & CBE'},
+  {tag:'Premium',  name:'Kia Seltos',                   brand:'Kia',            price:1099000, note:'Feature-loaded premium SUV. Strong resale.',      where:'Kia dealers in Chennai, CBE, Madurai'},
+  {tag:'Premium',  name:'Toyota Urban Cruiser Hyryder', brand:'Toyota',         price:1099000, note:'Best-in-class hybrid fuel efficiency.',            where:'Toyota dealerships, major cities TN'},
+];
+
+const LAND = [
+  {tag:'Chennai Core',  name:'Velachery / Adyar',           brand:'CMDA Approved', price:12000, unit:'per sq.ft', note:'Prime zones. 1000 sqft plot ≈ ₹1.2Cr+. High demand & resale.', loc:'Chennai South — 99acres, MagicBricks'},
+  {tag:'Chennai Sub',   name:'OMR / Sholinganallur',         brand:'DTCP Approved', price:6500,  unit:'per sq.ft', note:'IT corridor. 600–1200 sqft from ₹40L–80L. Great rental income.', loc:'OMR stretch — Housing.com, 99acres'},
+  {tag:'Chennai Sub',   name:'GST Road / Guduvanchery',      brand:'DTCP/CMDA',     price:4500,  unit:'per sq.ft', note:'Affordable suburban Chennai. Plots from ₹25L. Near Chengalpattu.', loc:'GST Road belt — MagicBricks'},
+  {tag:'Coimbatore',    name:'Saravanampatti / Kalapatti',   brand:'DTCP Approved', price:6200,  unit:'per sq.ft', note:"TN's fastest growing tier-2 city (+21% YoY). Great investment.", loc:'Coimbatore North & East'},
+  {tag:'Coimbatore',    name:'Kovaipudur / RS Puram',        brand:'DTCP Approved', price:8900,  unit:'per cent',  note:'Premium established zones. ₹8.9L/cent upwards.', loc:'Coimbatore city limits'},
+  {tag:'Madurai',       name:'Anna Nagar / Simmakkal',       brand:'DTCP Approved', price:2200,  unit:'per sq.ft', note:'Plots from ₹15L. Airport & Metro expansion underway.', loc:'Madurai city — Housing.com'},
+  {tag:'Trichy',        name:'Woraiyur / Thillai Nagar',     brand:'DTCP Approved', price:1800,  unit:'per sq.ft', note:'Affordable mid-city plots. 7–10 yr appreciation corridor.', loc:'Trichy city limits'},
+  {tag:'Budget Invest', name:'Tiruvannamalai',               brand:'DTCP + RERA',   price:999,   unit:'per sq.ft', note:'NRI & spiritual demand rising. ₹999–₹1800/sqft. Strong future.', loc:'Near Ramanashramam — Swarna Boomi'},
+  {tag:'Budget Invest', name:'Salem (Green Corridor)',        brand:'DTCP Approved', price:1400,  unit:'per sq.ft', note:'Salem–Chennai Expressway boost. Peripheral areas ₹999–₹2000/sqft.', loc:'Salem outskirts — MagicBricks'},
+];
+
+function affordLabel(price, surplus) {
+  const months = surplus > 0 ? Math.ceil(price / surplus) : 9999;
+  if (months <= 6)  return {cls:'ok',   text:'✓ Easily affordable ('+months+' months savings)'};
+  if (months <= 18) return {cls:'warn', text:'~ Save for '+months+' months'};
+  return                    {cls:'no',  text:'✗ Needs loan / '+months+' months to save'};
+}
+
+function affordLandLabel(pricePerSqft, surplus) {
+  const plotCost = pricePerSqft * 600; // 600 sqft reference plot
+  const months = surplus > 0 ? Math.ceil(plotCost / surplus) : 9999;
+  if (months <= 36) return {cls:'ok',   text:'✓ 600 sqft: save ~'+months+' months'};
+  if (months <= 84) return {cls:'warn', text:'~ 600 sqft: needs ~'+months+' months savings'};
+  return                    {cls:'no',  text:'✗ Home loan recommended ('+months+' months to save)'};
+}
+
+let activePTab = 'bike';
+function switchPTab(t) {
+  activePTab = t;
+  const order = ['bike','car','land'];
+  document.querySelectorAll('.ptab').forEach((el,i) => el.classList.toggle('active', order[i]===t));
+  document.querySelectorAll('.ppanel').forEach((el,i) => el.classList.toggle('active', order[i]===t));
+}
+
+function renderPurchaseCards(surplus, total) {
+  const makeCards = (items, isLand) => items.map(item => {
+    const aff = isLand ? affordLandLabel(item.price, surplus) : affordLabel(item.price, surplus);
+    const priceStr = isLand
+      ? '₹'+item.price.toLocaleString('en-IN')+' '+item.unit
+      : inr(item.price);
+    return `<div class="pcard">
+      <div class="ptag">${item.tag}</div>
+      <div class="pname">${item.name}</div>
+      <div class="pbrand">${item.brand}</div>
+      <div class="pprice">${priceStr}</div>
+      <div class="pnote">${item.note}</div>
+      <div class="pnote" style="margin-top:4px;color:#5f5e5a;">📍 ${item.where||item.loc}</div>
+      <div class="pafford ${aff.cls}">${aff.text}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('pg-bike').innerHTML = makeCards(BIKES, false);
+  document.getElementById('pg-car').innerHTML  = makeCards(CARS,  false);
+  document.getElementById('pg-land').innerHTML = makeCards(LAND,  true);
+  document.getElementById('land-note').innerHTML = `
+    <strong>🏡 Buying land in Tamil Nadu — 2026 Guide:</strong><br>
+    ✅ Always buy <strong>DTCP or CMDA approved</strong> layouts. Check <strong>RERA registration</strong> for new projects.<br>
+    📋 Documents to verify: <strong>Patta, EC (Encumbrance Certificate), Layout approval, NOC</strong>.<br>
+    🏦 For land loans, banks fund <strong>60–70% of guideline value</strong>. Registration + stamp duty: ~7–8% extra cost.<br>
+    🌟 Best for first-time buyers in 2026: <strong>Chengalpattu (GST Road belt)</strong>, <strong>Coimbatore North</strong>, and <strong>Tiruvannamalai</strong>.
+  `;
+}
+
+// Init budget tab on first render
+['b-salary','b-other'].forEach(id => {
+  document.getElementById(id).addEventListener('input', calcBudget);
+});
+
+renderCalc();
+renderReady();
+initBCats();
+calcBudget();
+</script>
+</body>
+</html>

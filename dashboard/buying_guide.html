@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rahul's Buying Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --accent: #f0c040;
+    --accent2: #e05c2a;
+    --green: #4caf7d;
+    --red: #e05c5c;
+    --yellow: #f0c040;
+    --text: #f0ede8;
+    --muted: #888;
+    --border: #2e2e2e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  header {
+    padding: 48px 24px 32px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #1a1400 0%, #0f0f0f 100%);
+  }
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -1px;
+    line-height: 1.1;
+  }
+  header p {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 14px;
+    font-style: italic;
+  }
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 16px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot.buy { background: var(--green); }
+  .dot.wait { background: var(--yellow); }
+  .dot.skip { background: var(--red); }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: #444; }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 20px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .card-header .emoji { font-size: 28px; flex-shrink: 0; }
+  .card-header .title-area { flex: 1; }
+  .card-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .card-header .subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge.buy { background: #1a3a28; color: var(--green); }
+  .badge.wait { background: #3a2e00; color: var(--yellow); }
+  .badge.skip { background: #3a1a1a; color: var(--red); }
+
+  .chevron {
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+  .card.open .chevron { transform: rotate(180deg); }
+
+  .card-body {
+    display: none;
+    padding: 0 20px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .card.open .card-body { display: block; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .info-box {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .info-box h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .info-box ul { list-style: none; padding: 0; }
+  .info-box ul li {
+    font-size: 13px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .info-box ul li:last-child { border-bottom: none; }
+  .info-box ul li::before { content: '→'; color: var(--accent); flex-shrink: 0; font-size: 12px; margin-top: 2px; }
+
+  .budget-bar {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 12px;
+  }
+  .budget-bar h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .budget-range {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .budget-range .low { color: var(--green); }
+  .budget-range .high { color: var(--accent2); }
+  .budget-range .sweet { color: var(--accent); font-weight: 600; }
+  .track { height: 6px; background: var(--border); border-radius: 3px; position: relative; }
+  .fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--green), var(--accent), var(--accent2)); }
+
+  .verdict-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .verdict-box {
+    flex: 1;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+  }
+  .verdict-box h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .verdict-box.buy-box { background: #1a3a28; }
+  .verdict-box.buy-box h4 { color: var(--green); }
+  .verdict-box.skip-box { background: #3a1a1a; }
+  .verdict-box.skip-box h4 { color: var(--red); }
+
+  .where-to-buy {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+  .where-to-buy h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .where-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+  .where-tag {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .where-tag.online { border-color: #3a5a8a; color: #7ab0e0; background: #0f1e30; }
+  .where-tag.offline { border-color: #3a5a3a; color: #7ac07a; background: #0f1e0f; }
+
+  .types-section { margin-top: 12px; }
+  .types-section h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .type-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .type-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .total-bar {
+    background: linear-gradient(135deg, #1a1400, #2a1a00);
+    border: 1px solid #3a2a00;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 40px;
+    text-align: center;
+  }
+  .total-bar h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .total-bar .amount {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .total-bar .note { font-size: 13px; color: var(--muted); margin-top: 8px; font-style: italic; }
+  .priority-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+  @media (max-width: 600px) { .priority-grid { grid-template-columns: 1fr; } }
+  .priority-item {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .priority-item .num {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .priority-item .label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .priority-item .items { font-size: 12px; color: var(--text); margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🛒 Rahul's Buying Guide</h1>
+  <p>Guduvanchery, Tamil Nadu · Engineer Trainee · Smart spending guide</p>
+</header>
+
+<div class="legend">
+  <span><span class="dot buy"></span> Buy Now</span>
+  <span><span class="dot wait"></span> Think Before</span>
+  <span><span class="dot skip"></span> Wait / Skip</span>
+</div>
+
+<div class="container">
+
+  <!-- FITNESS & SPORTS -->
+  <div class="section-title">🏃 Fitness & Sports</div>
+
+  <!-- Cricket Bat -->
+  <div class="card" id="c1">
+    <div class="card-header" onclick="toggle('c1')">
+      <div class="emoji">🏏</div>
+      <div class="title-area">
+        <h2>Cricket Bat</h2>
+        <div class="subtitle">Kashmir Willow / English Willow</div>
+      </div>
+      <span class="badge buy">Buy Now</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="info-box">
+          <h4>What to Check</h4>
+          <ul>
+            <li>Kashmir Willow for casual play, English Willow for serious cricket</li>
+            <li>Weight: 1100–1200g is ideal for most players</li>
+            <li>Grain count: 6–8 grains = good quality</li>
+            <li>Check for no cracks on the blade surface</li>
+            <li>Knocking required before first use</li>
+            <li>Handle grip should feel firm, not slippery</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>Types</h4>
+          <ul>
+            <li>Kashmir Willow — Budget, durable, casual play</li>
+            <li>English Willow Grade 3 — Mid-range, serious play</li>
+            <li>English Willow Grade 1 — Pro-level, premium price</li>
+            <li>Tennis ball bat — Lightweight, for gully cricket</li>
+          </ul>
+        </div>
+      </div>
+      <div class="budget-bar">
+        <h4>Budget Range</h4>
+        <div class="budget-range">
+          <span class="low">₹400 (basic)</span>
+          <span class="sweet">Sweet spot: ₹800–1,500</span>
+          <span class="high">₹5,000+ (pro)</span>
+        </div>
+        <div class="track"><div class="fill" style="width:45%"></div></div>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict-box buy-box"><h4>✅ Why Buy</h4>Fitness, fun, stress relief. A good ₹1,000 bat lasts 2–3 years easily.</div>
+        <div class="verdict-box skip-box"><h4>❌ Why Skip</h4>If you never actually play and it just collects dust.</div>
+      </div>
+      <div class="where-to-buy">
+        <h4>Where to Buy (Near Guduvanchery)</h4>
+        <div class="where-grid">
+          <span class="where-tag offline">🏪 Sports shops on GST Road, Tambaram</span>
+          <span class="where-tag offline">🏪 Decathlon, Pallavaram / OMR</span>
+          <span class="where-tag online">🌐 Amazon / Flipkart</span>
+          <span class="where-tag online">🌐 SS Cricket official site</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Football -->
+  <div class="card" id="c2">
+    <div class="card-header" onclick="toggle('c2')">
+      <div class="emoji">⚽</div>
+      <div class="title-area">
+        <h2>Football</h2>
+        <div class="subtitle">Size 5 standard / Size 4 training</div>
+      </div>
+      <span class="badge buy">Buy Now</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="info-box">
+          <h4>What to Check</h4>
+          <ul>
+            <li>Size 5 for adults (standard), Size 4 for training</li>
+            <li>PU material lasts longer than PVC</li>
+            <li>32-panel stitching = better flight accuracy</li>
+            <li>Bladder: Latex = better feel, Butyl = better air retention</li>
+            <li>Check for uniform stitching, no loose panels</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>Types</h4>
+          <ul>
+            <li>Match ball — Premium, used in games</li>
+            <li>Training ball — Durable, everyday use</li>
+            <li>Street/futsal ball — Low bounce, hard courts</li>
+            <li>Rubber ball — Budget, rough surfaces</li>
+          </ul>
+        </div>
+      </div>
+      <div class="budget-bar">
+        <h4>Budget Range</h4>
+        <div class="budget-range">
+          <span class="low">₹300 (basic)</span>
+          <span class="sweet">Sweet spot: ₹600–1,000</span>
+          <span class="high">₹3,000+ (Nike/Adidas)</span>
+        </div>
+        <div class="track"><div class="fill" style="width:35%"></div></div>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict-box buy-box"><h4>✅ Why Buy</h4>Great cardio, social sport. A ₹700 ball is all you need.</div>
+        <div class="verdict-box skip-box"><h4>❌ Why Skip</h4>Skip branded balls (Nike/Adidas) — you're paying for the logo, not quality.</div>
+      </div>
+      <div class="where-to-buy">
+        <h4>Where to Buy</h4>
+        <div class="where-grid">
+          <span class="where-tag offline">🏪 Decathlon, Pallavaram</span>
+          <span class="where-tag offline">🏪 Sports shops, Tambaram</span>
+          <span class="where-tag online">🌐 Decathlon.in</span>
+          <span class="where-tag online">🌐 Amazon</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pull-up Bar -->
+  <div class="card" id="c3">
+    <div class="card-header" onclick="toggle('c3')">
+      <div class="emoji">💪</div>
+      <div class="title-area">
+        <h2>Custom Pull-up Bar</h2>
+        <div class="subtitle">Wall-mounted / Doorframe / Freestanding</div>
+      </div>
+      <span class="badge buy">Buy Now</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="info-box">
+          <h4>What to Check</h4>
+          <ul>
+            <li>Weight capacity: min 120kg for safety margin</li>
+            <li>Wall-mounted = most stable, needs drilling</li>
+            <li>Doorframe = no drilling but less stable</li>
+            <li>Pipe thickness: 32mm–38mm is comfortable to grip</li>
+            <li>For custom: use GI pipe (galvanized iron), not PVC</li>
+            <li>Check wall material before mounting (RCC preferred)</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>Types</h4>
+          <ul>
+            <li>Doorframe bar — Easy install, budget option</li>
+            <li>Wall-mounted — Permanent, most stable</li>
+            <li>Freestanding tower — Expensive, no drilling needed</li>
+            <li>Custom GI pipe — Cheapest, made locally by welder</li>
+          </ul>
+        </div>
+      </div>
+      <div class="budget-bar">
+        <h4>Budget Range</h4>
+        <div class="budget-range">
+          <span class="low">₹500 (custom)</span>
+          <span class="sweet">Sweet spot: ₹1,000–2,500</span>
+          <span class="high">₹8,000+ (freestanding)</span>
+        </div>
+        <div class="track"><div class="fill" style="width:30%"></div></div>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict-box buy-box"><h4>✅ Why Buy</h4>Best ROI fitness item. Pull-ups work back, arms, core. One-time cost, lifetime use. Custom from local welder = ₹500–800 max.</div>
+        <div class="verdict-box skip-box"><h4>❌ Why Skip</h4>Don't buy if renting and can't drill walls. Go doorframe type instead.</div>
+      </div>
+      <div class="where-to-buy">
+        <h4>Where to Buy / Make</h4>
+        <div class="where-grid">
+          <span class="where-tag offline">🔧 Local welder near Guduvanchery bus stand</span>
+          <span class="where-tag offline">🏪 Hardware shops, Tambaram</span>
+          <span class="where-tag online">🌐 Amazon (doorframe type)</span>
+          <span class="where-tag online">🌐 Decathlon.in</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOME ITEMS -->
+  <div class="section-title">🏠 Home Items</div>
+
+  <!-- Carrom Board -->
+  <div class="card" id="c4">
+    <div class="card-header" onclick="toggle('c4')">
+      <div class="emoji">🎯</div>
+      <div class="title-area">
+        <h2>Carrom Board</h2>
+        <div class="subtitle">Full size / Mini</div>
+      </div>
+      <span class="badge buy">Buy Now</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="info-box">
+          <h4>What to Check</h4>
+          <ul>
+            <li>Board size: Full (29×29 inch) for proper play</li>
+            <li>Plywood thickness: min 12mm, 18mm is best</li>
+            <li>Surface should be smooth — run hand to check</li>
+            <li>Legs should be sturdy, not wobbly</li>
+            <li>Check striker and coins quality</li>
+            <li>Boric powder needed for smooth play (buy separately)</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>Types</h4>
+          <ul>
+            <li>Tournament grade — 18mm ply, competition use</li>
+            <li>Standard full size — 12mm, home use</li>
+            <li>Mini board — Small, travel use</li>
+          </ul>
+        </div>
+      </div>
+      <div class="budget-bar">
+        <h4>Budget Range</h4>
+        <div class="budget-range">
+          <span class="low">₹800 (basic)</span>
+          <span class="sweet">Sweet spot: ₹1,500–2,500</span>
+          <span class="high">₹5,000+ (tournament)</span>
+        </div>
+        <div class="track"><div class="fill" style="width:40%"></div></div>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict-box buy-box"><h4>✅ Why Buy</h4>Family entertainment, lasts decades. ₹1,500 buys a solid board that pays for itself in fun.</div>
+        <div class="verdict-box skip-box"><h4>❌ Why Skip</h4>If you live alone with no one to play with regularly.</div>
+      </div>
+      <div class="where-to-buy">
+        <h4>Where to Buy</h4>
+        <div class="where-grid">
+          <span class="where-tag offline">🏪 Toys/sports shops, Tambaram market</span>
+          <span class="where-tag offline">🏪 General stores, Guduvanchery</span>
+          <span class="where-tag online">🌐 Amazon / Flipkart</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shoe Stand -->
+  <div class="card" id="c5">
+    <div class="card-header" onclick="toggle('c5')">
+      <div class="emoji">👟</div>
+      <div class="title-area">
+        <h2>Shoe Stand / Rack</h2>
+        <div class="subtitle">3-tier / 4-tier metal or wood</div>
+      </div>
+      <span class="badge wait">Think Before</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="info-box">
+          <h4>What to Check</h4>
+          <ul>
+            <li>Number of tiers: 3-tier holds 6 pairs, 4-tier holds 8 pairs</li>
+            <li>Metal frame = more durable than plastic</li>
+            <li>Width: 60cm is standard, check your entry space</li>
+            <li>Stackable racks are better for expanding later</li>
+            <li>Avoid cheap plastic — breaks in 6 months</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>Types</h4>
+          <ul>
+            <li>Open metal rack — Budget, air circulation</li>
+            <li>Wooden cabinet — Premium look, closed storage</li>
+            <li>Stackable plastic — Cheap but breaks easily</li>
+            <li>Wall-mounted — Space saving, needs drilling</li>
+          </ul>
+        </div>
+      </div>
+      <div class="budget-bar">
+        <h4>Budget Range</h4>
+        <div class="budget-range">
+          <span class="low">₹300 (plastic)</span>
+          <span class="sweet">Sweet spot: ₹500–900</span>
+          <span class="high">₹3,000+ (wood cabinet)</span>
+        </div>
+        <div class="track"><div class="fill" style="width:25%"></div></div>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict-box buy-box"><h4>✅ Why Buy</h4>Keeps home organized. ₹600 metal rack is all you need. Not exciting but useful.</div>
+        <div class="verdict-box skip-box"><h4>❌ Why Skip</h4>Not urgent. Buy last. Any local store has these — no need to overthink.</div>
+      </div>
+      <div class="where-to-buy">
+        <h4>Where to Buy</h4>
+        <div class="where-grid">
+          <span class="where-tag offline">🏪 Any household store, Guduvanchery / Tambaram</span>
+          <span class="where-tag online">🌐 Amazon / Flipkart (check local pickup)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card" id="c6">
+    <div class="card-header" onclick="toggle('c6')">
+      <div class="emoji">🪑</div>
+      <div class="title-area">
+        <h2>Study / Work Table</h2>
+        <div class="subtitle">Computer desk / Study table</div>
+      </div>
+      <span class="badge wait">Think Before</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="info-box">
+          <h4>What to Check</h4>
+          <ul>
+            <li>Height: 75cm standard, 72–76cm ergonomic range</li>
+            <li>Width: min 100cm if placing desktop PC</li>
+            <li>Material: Engineered wood (MDF/particle board) is budget-friendly</li>
+            <li>Check for cable management holes if buying for PC setup</li>
+            <li>Wobble test: push corners, should not shake</li>
+            <li>Weight capacity: at least 50kg load</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>Types</h4>
+          <ul>
+            <li>Simple study table — Budget, compact</li>
+            <li>L-shaped desk — More surface area, corner placement</li>
+            <li>Computer desk with hutch — Has shelves above</li>
+            <li>Standing desk — Premium, adjustable height</li>
+          </ul>
+        </div>
+      </div>
+      <div class="budget-bar">
+        <h4>Budget Range</h4>
+        <div class="budget-range">
+          <span class="low">₹1,500 (basic)</span>
+          <span class="sweet">Sweet spot: ₹2,500–5,000</span>
+          <span class="high">₹15,000+ (standing)</span>
+        </div>
+        <div class="track"><div class="fill" style="width:40%"></div></div>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict-box buy-box"><h4>✅ Why Buy</h4>If you're buying a desktop PC or studying for SSC, a proper table is essential for posture and focus.</div>
+        <div class="verdict-box skip-box"><h4>❌ Why Skip</h4>If you already have a surface to work on. Don't buy table before deciding on PC.</div>
+      </div>
+      <div class="where-to-buy">
+        <h4>Where to Buy</h4>
+        <div class="where-grid">
+          <span class="where-tag offline">🏪 Furniture shops, Tambaram / Chromepet</span>
+          <span class="where-tag offline">🏪 Nilkamal stores, GST Road</span>
+          <span class="where-tag online">🌐 Pepperfry / Urban Ladder</span>
+          <span class="where-tag online">🌐 Amazon / Flipkart</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cooling Glasses -->
+  <div class="card" id="c7">
+    <div class="card-header" onclick="toggle('c7')">
+      <div class="emoji">😎</div>
+      <div class="title-area">
+        <h2>Cooling Glasses (Sunglasses)</h2>
+        <div class="subtitle">UV protection / Polarized</div>
+      </div>
+      <span class="badge wait">Think Before</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="info-box">
+          <h4>What to Check</h4>
+          <ul>
+            <li>UV400 protection is mandatory — not just "UV protection"</li>
+            <li>Polarized lenses = reduces glare (good for Chennai sun + bike)</li>
+            <li>Frame fit: should not press nose bridge or ears</li>
+            <li>Lens color: grey/brown for outdoor, yellow for night</li>
+            <li>Check for CE or ANSI Z80.3 certification marking</li>
+            <li>Avoid cheap ₹100 roadside glasses — damage eyes more than protect</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>Types</h4>
+          <ul>
+            <li>Polarized — Best for outdoor/biking in Chennai sun</li>
+            <li>Photochromic — Darkens in sun, clears indoors</li>
+            <li>Sports wrap — For cricket/football</li>
+            <li>Fashion frame — Style over function</li>
+          </ul>
+        </div>
+      </div>
+      <div class="budget-bar">
+        <h4>Budget Range</h4>
+        <div class="budget-range">
+          <span class="low">₹300 (fake UV)</span>
+          <span class="sweet">Sweet spot: ₹500–1,500</span>
+          <span class="high">₹5,000+ (Ray-Ban)</span>
+        </div>
+        <div class="track"><div class="fill" style="width:30%"></div></div>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict-box buy-box"><h4>✅ Why Buy</h4>Chennai heat is brutal. If you commute by bike, UV400 polarized glasses genuinely protect your eyes. ₹800 buys a solid pair.</div>
+        <div class="verdict-box skip-box"><h4>❌ Why Skip</h4>If you travel only by car/bus. Don't buy roadside ₹100 glasses — they do more harm than good.</div>
+      </div>
+      <div class="where-to-buy">
+        <h4>Where to Buy</h4>
+        <div class="where-grid">
+          <span class="where-tag offline">🏪 Lenskart store, Tambaram / Velachery</span>
+          <span class="where-tag offline">🏪 Optical shops on GST Road</span>
+          <span class="where-tag online">🌐 Lenskart.com</span>
+          <span class="where-tag online">🌐 Amazon (check seller carefully)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECH ITEMS -->
+  <div class="section-title">💻 Tech Items</div>
+
+  <!-- Desktop PC -->
+  <div class="card" id="c8">
+    <div class="card-header" onclick="toggle('c8')">
+      <div class="emoji">🖥️</div>
+      <div class="title-area">
+        <h2>Desktop PC (CPU)</h2>
+        <div class="subtitle">Custom build / Branded</div>
+      </div>
+      <span class="badge skip">Wait / Skip</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="info-box">
+          <h4>What to Check (if buying)</h4>
+          <ul>
+            <li>Processor: Intel i5-12th gen or AMD Ryzen 5 5600 minimum</li>
+            <li>RAM: 16GB DDR4 minimum for multitasking</li>
+            <li>Storage: SSD (512GB) for speed, HDD for storage</li>
+            <li>Monitor: 24-inch FHD IPS panel minimum</li>
+            <li>Custom build = better value than branded</li>
+            <li>Check warranty: processor (3yr), cabinet (1yr)</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>Types</h4>
+          <ul>
+            <li>Budget build — i3/Ryzen 3, basic tasks</li>
+            <li>Mid-range — i5/Ryzen 5, recommended for you</li>
+            <li>Workstation — i7/Ryzen 7, heavy work</li>
+            <li>Branded (HP/Dell) — Costlier, less upgradeable</li>
+          </ul>
+        </div>
+      </div>
+      <div class="budget-bar">
+        <h4>Budget Range</h4>
+        <div class="budget-range">
+          <span class="low">₹20,000 (basic)</span>
+          <span class="sweet">Sweet spot: ₹35,000–50,000</span>
+          <span class="high">₹80,000+ (workstation)</span>
+        </div>
+        <div class="track"><div class="fill" style="width:55%"></div></div>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict-box buy-box"><h4>✅ Why Buy</h4>If you're serious about SSC prep, Raspberry Pi projects, MATLAB/Python practice at home — a PC makes all that possible.</div>
+        <div class="verdict-box skip-box"><h4>❌ Why Skip</h4>Most expensive item. At ₹20,000–35,000/month salary, this is 1–2 months income. Wait for salary hike or government job confirmation.</div>
+      </div>
+      <div class="where-to-buy">
+        <h4>Where to Buy</h4>
+        <div class="where-grid">
+          <span class="where-tag offline">🏪 SP Road, Chennai (custom build)</span>
+          <span class="where-tag offline">🏪 Poorvika / Sangeetha, Tambaram</span>
+          <span class="where-tag online">🌐 Amazon / Flipkart (compare prices)</span>
+          <span class="where-tag online">🌐 MD Computers online</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Raspberry Pi -->
+  <div class="card" id="c9">
+    <div class="card-header" onclick="toggle('c9')">
+      <div class="emoji">🍓</div>
+      <div class="title-area">
+        <h2>Raspberry Pi</h2>
+        <div class="subtitle">Pi 4 / Pi 5 / Pi Zero</div>
+      </div>
+      <span class="badge buy">Buy Now</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="info-box">
+          <h4>What to Check</h4>
+          <ul>
+            <li>Pi 5 (latest) = best performance, 4GB/8GB RAM</li>
+            <li>Pi 4 = still very capable, cheaper now</li>
+            <li>Pi Zero 2W = budget, for lightweight IoT projects</li>
+            <li>Buy official kit with power adapter + SD card + case</li>
+            <li>MicroSD: min 32GB Class 10 for OS</li>
+            <li>Check for genuine boards — avoid clones on Amazon</li>
+            <li>Must buy from authorized Indian reseller</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>What You Can Build</h4>
+          <ul>
+            <li>Home automation (lights, fans via relay)</li>
+            <li>IoT energy meter (relevant to your project!)</li>
+            <li>SCADA dashboard on local network</li>
+            <li>Mini desktop PC / media server</li>
+            <li>Python + AI projects for resume</li>
+            <li>Dog detection system upgrade from your project</li>
+          </ul>
+        </div>
+      </div>
+      <div class="budget-bar">
+        <h4>Budget Range</h4>
+        <div class="budget-range">
+          <span class="low">₹1,500 (Pi Zero)</span>
+          <span class="sweet">Sweet spot: Pi 4 kit ₹6,000–8,000</span>
+          <span class="high">Pi 5 kit ₹10,000–13,000</span>
+        </div>
+        <div class="track"><div class="fill" style="width:50%"></div></div>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict-box buy-box"><h4>✅ Why Buy</h4>As an EEE engineer at Inovance, this is a DIRECT skill builder. IoT + automation projects on Raspberry Pi boost your resume massively. Much cheaper than a PC for learning.</div>
+        <div class="verdict-box skip-box"><h4>❌ Why Skip</h4>Don't buy if you won't invest time in learning. It's a project tool, not a toy.</div>
+      </div>
+      <div class="where-to-buy">
+        <h4>Where to Buy</h4>
+        <div class="where-grid">
+          <span class="where-tag offline">🏪 Robu.in / Evelta — physical pickup available</span>
+          <span class="where-tag offline">🏪 SP Road electronics shops, Chennai</span>
+          <span class="where-tag online">🌐 Robu.in (most reliable in India)</span>
+          <span class="where-tag online">🌐 Evelta.com (official Pi reseller)</span>
+          <span class="where-tag online">🌐 Amazon (check seller — authorized only)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drone -->
+  <div class="card" id="c10">
+    <div class="card-header" onclick="toggle('c10')">
+      <div class="emoji">🚁</div>
+      <div class="title-area">
+        <h2>Drone</h2>
+        <div class="subtitle">Hobby / Photography / Racing</div>
+      </div>
+      <span class="badge skip">Wait / Skip</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="info-box">
+          <h4>What to Check (if buying)</h4>
+          <ul>
+            <li>Under 250g = no DGCA registration needed in India</li>
+            <li>Above 250g = must register with DGCA (Digital Sky portal)</li>
+            <li>Flight time: 20–30 min per charge is decent</li>
+            <li>Range: 500m+ for photography drones</li>
+            <li>Camera: 2.7K minimum if buying for photography</li>
+            <li>Spare propellers and battery essential to buy with</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>Types</h4>
+          <ul>
+            <li>Toy drone (under ₹2,000) — indoor only, no camera</li>
+            <li>Mini drone under 250g — no registration, basic cam</li>
+            <li>DJI Mini 4 Pro — Best under 250g, expensive</li>
+            <li>FPV racing drone — DIY build, technical</li>
+            <li>Agriculture drone — Enterprise level, very expensive</li>
+          </ul>
+        </div>
+      </div>
+      <div class="budget-bar">
+        <h4>Budget Range</h4>
+        <div class="budget-range">
+          <span class="low">₹1,500 (toy)</span>
+          <span class="sweet">Good drone: ₹15,000–30,000</span>
+          <span class="high">DJI: ₹60,000+</span>
+        </div>
+        <div class="track"><div class="fill" style="width:80%"></div></div>
+      </div>
+      <div class="verdict-row">
+        <div class="verdict-box buy-box"><h4>✅ Why Buy</h4>If you want to learn aerial robotics or build an FPV drone from scratch — great EEE project. Drone tech is a growing career field in India.</div>
+        <div class="verdict-box skip-box"><h4>❌ Why Skip (Now)</h4>⚠️ Legal issue: Flying drones in Guduvanchery/Chennai suburbs requires DGCA permission. Tamil Nadu has strict no-fly zones near airports (Chennai airport nearby!). Cheap toy drones are useless outdoors. Good drones cost ₹15,000–60,000. SKIP until financially stable.</div>
+      </div>
+      <div class="where-to-buy">
+        <h4>Where to Buy (when ready)</h4>
+        <div class="where-grid">
+          <span class="where-tag online">🌐 DJI India official site</span>
+          <span class="where-tag online">🌐 Amazon (check seller)</span>
+          <span class="where-tag offline">🏪 Drone shops, Anna Nagar, Chennai</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOTAL BUDGET SUMMARY -->
+  <div class="total-bar">
+    <h3>💰 Total Budget Summary</h3>
+    <div class="priority-grid">
+      <div class="priority-item">
+        <div class="num">Month 1</div>
+        <div class="label">Buy Now</div>
+        <div class="items">Cricket bat + Football + Pull-up bar + Carrom board</div>
+        <div style="margin-top:8px; color:var(--green); font-weight:600;">~₹4,000–6,000</div>
+      </div>
+      <div class="priority-item">
+        <div class="num">Month 2</div>
+        <div class="label">Think Before</div>
+        <div class="items">Shoe stand + Table + Sunglasses + Raspberry Pi</div>
+        <div style="margin-top:8px; color:var(--yellow); font-weight:600;">~₹10,000–15,000</div>
+      </div>
+      <div class="priority-item">
+        <div class="num">Month 3+</div>
+        <div class="label">Wait</div>
+        <div class="items">Desktop PC (after salary hike / SSC result)</div>
+        <div style="margin-top:8px; color:var(--red); font-weight:600;">~₹35,000–50,000</div>
+      </div>
+    </div>
+    <div class="amount">~₹49,000–71,000 total</div>
+    <div class="note">⚠️ Drone excluded — wait until financially stable & check DGCA rules. Don't buy everything at once — space it over 3 months.</div>
+  </div>
+
+</div>
+
+<script>
+function toggle(id) {
+  const card = document.getElementById(id);
+  card.classList.toggle('open');
+}
+// Open first card by default
+document.getElementById('c1').classList.add('open');
+</script>
+</body>
+</html>
