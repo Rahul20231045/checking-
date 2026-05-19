@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engineer's Master Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f12;
+    --bg2: #131619;
+    --bg3: #1a1e23;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #eaeaea;
+    --text2: #8a9099;
+    --text3: #555c66;
+    --accent: #00c9a7;
+    --accent2: #0098ff;
+    --font: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(13,15,18,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .logo-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.2px;
+  }
+  .logo-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 1px;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .search-wrap {
+    position: relative;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    pointer-events: none;
+  }
+  #search {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 7px 12px 7px 34px;
+    width: 220px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #search::placeholder { color: var(--text3); }
+  #search:focus { border-color: var(--accent); }
+  .count-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    white-space: nowrap;
+  }
+  .count-badge span { color: var(--accent); font-weight: 500; }
+
+  /* ── MAIN LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 1rem;
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+    background: var(--bg2);
+  }
+  .sidebar-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-left: 8px;
+  }
+  .filter-group { margin-bottom: 1.5rem; }
+  .filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 8px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--font);
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { background: var(--bg3); color: var(--text); }
+  .filter-btn.active { background: rgba(0,201,167,0.1); color: var(--accent); }
+  .filter-btn .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .filter-btn .fcount {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    background: var(--bg3);
+    border-radius: 10px;
+    padding: 1px 6px;
+  }
+  .filter-btn.active .fcount { color: var(--accent); }
+  .sidebar-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1rem 0;
+  }
+  .stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 1rem;
+  }
+  .stat-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .stat-lbl {
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  /* ── CONTENT ── */
+  .content { padding: 2rem; overflow-y: auto; }
+
+  .section { margin-bottom: 2.5rem; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .section-icon {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .section-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+  }
+
+  /* ── CARDS GRID ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+  }
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem 1rem 1.3rem;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  }
+  .card:hover {
+    border-color: var(--border2);
+    background: var(--bg3);
+    transform: translateY(-1px);
+  }
+  .card-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+  }
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .card-icon {
+    width: 32px; height: 32px;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .cost-pill {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .cost-free { color: #00c9a7; border-color: rgba(0,201,167,0.3); background: rgba(0,201,167,0.08); }
+  .cost-freemium { color: #f0a500; border-color: rgba(240,165,0,0.3); background: rgba(240,165,0,0.08); }
+  .cost-paid { color: #ff6b6b; border-color: rgba(255,107,107,0.3); background: rgba(255,107,107,0.08); }
+  .card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .card-desc {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.55;
+  }
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2px;
+  }
+  .tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text2);
+    background: rgba(255,255,255,0.04);
+  }
+  .visit-link {
+    font-size: 11px;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    text-decoration: none;
+  }
+  .card:hover .visit-link { color: var(--accent); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    display: none;
+    text-align: center;
+    padding: 4rem 1rem;
+    color: var(--text3);
+  }
+  .empty-state svg { margin-bottom: 12px; opacity: 0.4; }
+  .empty-state p { font-size: 14px; }
+
+  /* ── HIDDEN ── */
+  .hidden { display: none !important; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    .topbar { padding: 0 1rem; }
+    #search { width: 160px; }
+    .content { padding: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="logo-icon">⚙️</div>
+    <div>
+      <div class="logo-text">Engineer's Master Toolkit</div>
+      <div class="logo-sub">PLC · VFD · Servo · Robots · Automation</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search" placeholder="Search resources..." oninput="doFilter()" />
+    </div>
+    <div class="count-badge"><span id="vis-count">32</span> resources</div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="filter-group">
+      <div class="sidebar-title">Filter by Category</div>
+      <button class="filter-btn active" onclick="setF('all',this)">
+        <span class="dot" style="background:#8a9099"></span> All Resources
+        <span class="fcount" id="fc-all">32</span>
+      </button>
+      <button class="filter-btn" onclick="setF('robot',this)">
+        <span class="dot" style="background:#0098ff"></span> Industrial Robots
+        <span class="fcount" id="fc-robot">6</span>
+      </button>
+      <button class="filter-btn" onclick="setF('plc',this)">
+        <span class="dot" style="background:#00c9a7"></span> PLC
+        <span class="fcount" id="fc-plc">10</span>
+      </button>
+      <button class="filter-btn" onclick="setF('vfd',this)">
+        <span class="dot" style="background:#f0a500"></span> VFD &amp; Drives
+        <span class="fcount" id="fc-vfd">5</span>
+      </button>
+      <button class="filter-btn" onclick="setF('servo',this)">
+        <span class="dot" style="background:#a78bfa"></span> Servo &amp; Motion
+        <span class="fcount" id="fc-servo">6</span>
+      </button>
+      <button class="filter-btn" onclick="setF('simulator',this)">
+        <span class="dot" style="background:#f97316"></span> Simulators
+        <span class="fcount" id="fc-simulator">5</span>
+      </button>
+      <button class="filter-btn" onclick="setF('free',this)">
+        <span class="dot" style="background:#22c55e"></span> Free Only
+        <span class="fcount" id="fc-free">22</span>
+      </button>
+      <button class="filter-btn" onclick="setF('web',this)">
+        <span class="dot" style="background:#ec4899"></span> General Web
+        <span class="fcount" id="fc-web">12</span>
+      </button>
+    </div>
+
+    <hr class="sidebar-divider">
+
+    <div class="sidebar-title">Stats</div>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-num">32</div>
+        <div class="stat-lbl">Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">22</div>
+        <div class="stat-lbl">Free</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">3</div>
+        <div class="stat-lbl">Sections</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">8</div>
+        <div class="stat-lbl">Topics</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="content" id="main-content">
+
+    <!-- SECTION: Industrial Robots -->
+    <section class="section" id="sec-robots">
+      <div class="section-header">
+        <div class="section-title">
+          <div class="section-icon" style="background:rgba(0,152,255,0.15)">🤖</div>
+          Industrial Robots
+        </div>
+        <span class="section-count" id="sc-robots">6 resources</span>
+      </div>
+      <div class="cards-grid" id="grid-robots"></div>
+    </section>
+
+    <!-- SECTION: PLC / VFD / Automation -->
+    <section class="section" id="sec-plc">
+      <div class="section-header">
+        <div class="section-title">
+          <div class="section-icon" style="background:rgba(0,201,167,0.15)">⚙️</div>
+          PLC, VFD &amp; Automation
+        </div>
+        <span class="section-count" id="sc-plc">10 resources</span>
+      </div>
+      <div class="cards-grid" id="grid-plc"></div>
+    </section>
+
+    <!-- SECTION: General Web -->
+    <section class="section" id="sec-web">
+      <div class="section-header">
+        <div class="section-title">
+          <div class="section-icon" style="background:rgba(236,72,153,0.15)">🌐</div>
+          General Web &amp; Dev Tools
+        </div>
+        <span class="section-count" id="sc-web">12 resources</span>
+      </div>
+      <div class="cards-grid" id="grid-web"></div>
+    </section>
+
+    <div class="empty-state" id="empty-state">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M8 11h6M11 8v6"/></svg>
+      <p>No resources match your search.</p>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const DATA = {
+  robots: [
+    { n:"RoboDK Academy", desc:"Free self-paced robotics courses covering simulation and offline programming for 1,200+ robots from 80+ brands including ABB, FANUC, KUKA, and Yaskawa. No hardware needed.", url:"https://academy.robodk.com", tags:["robot","simulator","free"], label:"Multi-brand OLP", cost:"Free", bar:"#0098ff", iconBg:"rgba(0,152,255,0.15)", icon:"🎓" },
+    { n:"Universal Robots Academy", desc:"Official free e-learning from Universal Robots. Interactive modules for UR e-Series and CB3 cobots — no physical robot required to participate.", url:"https://academy.universal-robots.com/free-e-learning", tags:["robot","free"], label:"Cobot / UR Series", cost:"Free", bar:"#00c9a7", iconBg:"rgba(0,201,167,0.15)", icon:"🦾" },
+    { n:"FANUC TechTransfer", desc:"200+ free FANUC tutorials covering ROBOGUIDE simulation, iRVision, conveyor tracking, Software PLC, positioner setup, and R-50iA controller programming.", url:"https://techtransfer.fanucamerica.com", tags:["robot","simulator","free"], label:"FANUC", cost:"Free", bar:"#f97316", iconBg:"rgba(249,115,22,0.15)", icon:"🏭" },
+    { n:"RoboDK Software", desc:"Industry-standard robot simulation and offline programming. Supports 1,200+ robots from 80+ manufacturers. Generate ready-to-run code for ABB, FANUC, KUKA, Yaskawa, and more.", url:"https://robodk.com", tags:["robot","simulator"], label:"Offline Programming", cost:"Freemium", bar:"#a78bfa", iconBg:"rgba(167,139,250,0.15)", icon:"💻" },
+    { n:"IndusProgramming", desc:"Step-by-step tutorials for ABB RAPID and FANUC TP programming. Example programs, eBooks, and beginner guides. ABB RobotStudio is permanently free; FANUC ROBOGUIDE has a 30-day trial.", url:"https://indusprogramming.com", tags:["robot","free"], label:"ABB + FANUC", cost:"Free", bar:"#ec4899", iconBg:"rgba(236,72,153,0.15)", icon:"📖" },
+    { n:"SolisPLC – Robotics", desc:"Expert-led courses on industrial robotics, FANUC troubleshooting, SCADA integration, machine vision, and automation. Part of the broader SolisPLC training ecosystem.", url:"https://www.solisplc.com", tags:["robot","plc"], label:"Robotics + PLC", cost:"Freemium", bar:"#22c55e", iconBg:"rgba(34,197,94,0.15)", icon:"🎯" },
+  ],
+  plc: [
+    { n:"RealPars", desc:"Industry-leading automation platform with video courses on PLC programming, VFDs, servo drives, HMI, and industrial networking — taught by practicing automation engineers.", url:"https://www.realpars.com", tags:["plc","vfd","servo"], label:"PLC + VFD + Servo", cost:"Freemium", bar:"#00c9a7", iconBg:"rgba(0,201,167,0.15)", icon:"📡" },
+    { n:"SolisPLC", desc:"The #1 automation training platform. Expert-led courses covering ladder logic, servo motors, VFDs, robotics, machine vision, OPC-UA, MQTT, and SCADA.", url:"https://www.solisplc.com", tags:["plc","vfd","servo","robot"], label:"Full Automation Stack", cost:"Freemium", bar:"#0098ff", iconBg:"rgba(0,152,255,0.15)", icon:"🏗️" },
+    { n:"PLC Academy", desc:"Free PLC programming resources covering ladder logic, FBD, structured text, SCADA, timers, counters, and Siemens S7-1200/Allen-Bradley tutorials.", url:"https://www.plcacademy.com", tags:["plc","free"], label:"PLC Basics", cost:"Free", bar:"#22c55e", iconBg:"rgba(34,197,94,0.15)", icon:"📚" },
+    { n:"ControlByte", desc:"Structured Siemens S7-1200/1500, CODESYS, PackML, servo drive, and VFD motion programming courses — all using free simulators throughout the training.", url:"https://controlbyte.tech", tags:["plc","vfd","servo"], label:"Siemens + Servo + VFD", cost:"Paid", bar:"#a78bfa", iconBg:"rgba(167,139,250,0.15)", icon:"🧩" },
+    { n:"AutomationDirect", desc:"Hardware vendor with free learning resources, VFD control guides, PLC software downloads (Do-More Designer), VFD wiring tutorials, and technical documentation.", url:"https://www.automationdirect.com", tags:["vfd","plc","free"], label:"VFD + PLC Hardware", cost:"Free", bar:"#f97316", iconBg:"rgba(249,115,22,0.15)", icon:"⚡" },
+    { n:"PLC Simulator Online", desc:"Browser-based interactive ladder logic simulator. Create, simulate, and share PLC programs online with no installation required — perfect for practice.", url:"https://app.plcsimulator.online", tags:["simulator","plc","free"], label:"Online Simulator", cost:"Free", bar:"#f0a500", iconBg:"rgba(240,165,0,0.15)", icon:"▶️" },
+    { n:"Industrial Monitor Direct", desc:"In-depth technical guides on PLC motion control setup, VFD + servo hardware selection, Siemens drive wiring, and free PLC simulator recommendations.", url:"https://industrialmonitordirect.com", tags:["vfd","servo","plc","free"], label:"Drives + Motion Control", cost:"Free", bar:"#00c9a7", iconBg:"rgba(0,201,167,0.12)", icon:"🔧" },
+    { n:"Unitronics Servo & Motion", desc:"Official Unitronics platform for servo motor programming, PLCopen motion FBs, point-to-point, jog, and homing — integrated PLC + HMI + servo environment.", url:"https://www.unitronicsplc.com/servo-motion", tags:["servo","plc","free"], label:"Servo + PLC Motion", cost:"Free", bar:"#a78bfa", iconBg:"rgba(167,139,250,0.15)", icon:"🔄" },
+    { n:"Automation Community", desc:"Free online PLC course covering PLC inputs/outputs, ladder diagrams, SFC, and relay instructions — ideal for complete beginners entering industrial automation.", url:"https://learn.automationcommunity.com", tags:["plc","free"], label:"PLC Beginner", cost:"Free", bar:"#0098ff", iconBg:"rgba(0,152,255,0.15)", icon:"👥" },
+    { n:"PLCTalk Forum", desc:"Active engineer community forum covering PLC troubleshooting, servo tuning, VFD parameter help, simulator recommendations, and real plant-floor problem-solving.", url:"https://www.plctalk.net/forums", tags:["plc","vfd","servo","free"], label:"Community Forum", cost:"Free", bar:"#ec4899", iconBg:"rgba(236,72,153,0.15)", icon:"💬" },
+  ],
+  web: [
+    { n:"Coddy Docs", desc:"Interactive coding documentation and programming learning platform with hands-on exercises.", url:"https://coddy.tech", tags:["web","free"], label:"Coding Learning", cost:"Free", bar:"#0098ff", iconBg:"rgba(0,152,255,0.15)", icon:"💻" },
+    { n:"Blueprint", desc:"Engineering and industrial automation solutions platform for process design and workflow.", url:"https://blueprint.io", tags:["web","plc"], label:"Engineering", cost:"Freemium", bar:"#00c9a7", iconBg:"rgba(0,201,167,0.15)", icon:"🏗️" },
+    { n:"Electude Simulator", desc:"Automotive and electrical simulation learning environment for electrical diagnosis and component training.", url:"https://www.electude.com", tags:["web","simulator"], label:"Simulation", cost:"Paid", bar:"#f0a500", iconBg:"rgba(240,165,0,0.15)", icon:"⚡" },
+    { n:"Future Tools", desc:"Comprehensive AI tools discovery website for productivity, automation, and workflow enhancement.", url:"https://www.futuretools.io", tags:["web","free"], label:"AI Tools", cost:"Free", bar:"#a78bfa", iconBg:"rgba(167,139,250,0.15)", icon:"🤖" },
+    { n:"EveryTool.in", desc:"Free online utility tools, calculators, converters, and utilities for everyday engineering tasks.", url:"https://everytool.in", tags:["web","free"], label:"Utilities", cost:"Free", bar:"#f97316", iconBg:"rgba(249,115,22,0.15)", icon:"🛠️" },
+    { n:"Anime.js Docs", desc:"Official Anime.js documentation for creating web animations using JavaScript — timelines, keyframes, and SVG morphing.", url:"https://animejs.com/documentation", tags:["web","free"], label:"Web Animations", cost:"Free", bar:"#ec4899", iconBg:"rgba(236,72,153,0.15)", icon:"🎞️" },
+    { n:"FUNES World", desc:"Creative and experimental interactive visual experience platform — generative and immersive art.", url:"https://funes.world", tags:["web","free"], label:"Creative", cost:"Free", bar:"#a78bfa", iconBg:"rgba(167,139,250,0.15)", icon:"🌌" },
+    { n:"Map This", desc:"Online map-sharing and custom location visualization tool for sharing routes and custom markers.", url:"https://mapthis.io", tags:["web","free"], label:"Mapping", cost:"Free", bar:"#00c9a7", iconBg:"rgba(0,201,167,0.15)", icon:"🗺️" },
+    { n:"Abeto Messenger", desc:"Web-based messaging and communication platform for team collaboration.", url:"https://abeto.app", tags:["web","free"], label:"Messaging", cost:"Free", bar:"#0098ff", iconBg:"rgba(0,152,255,0.15)", icon:"💬" },
+    { n:"Slow Roads", desc:"Relaxing endless procedural driving simulator with scenic natural environments and ambient sound.", url:"https://slowroads.io", tags:["web","simulator","free"], label:"Simulation", cost:"Free", bar:"#22c55e", iconBg:"rgba(34,197,94,0.15)", icon:"🚗" },
+    { n:"Zoomquilt ZZZ", desc:"Infinite zoom surreal collaborative art piece and ambient relaxation experience for your browser.", url:"https://zoomquilt.org", tags:["web","free"], label:"Creative", cost:"Free", bar:"#ec4899", iconBg:"rgba(236,72,153,0.15)", icon:"🌀" },
+    { n:"CODESYS MC_MoveRelative", desc:"Official CODESYS SM3 Basic motion control documentation for the MC_MoveRelative PLC function block — relative axis movement reference.", url:"https://help.codesys.com", tags:["web","plc","servo","free"], label:"CODESYS Docs", cost:"Free", bar:"#f0a500", iconBg:"rgba(240,165,0,0.15)", icon:"📋" },
+    { 
+  n:"Learn Anything", 
+  desc:"Open-source knowledge graph and learning roadmap explorer. Discover curated learning paths for any topic — programming, engineering, science, and more.", 
+  url:"https://learn-anything.xyz/", 
+  tags:["web","free"], 
+  label:"Knowledge Graph", 
+  cost:"Free", 
+  bar:"#00c9a7", 
+  iconBg:"rgba(0,201,167,0.15)", 
+  icon:"🧠" 
+},
+  ]
+};
+
+const COST_CLASS = { Free:'cost-free', Freemium:'cost-freemium', Paid:'cost-paid' };
+
+function buildCard(item) {
+  return `
+    <a class="card" href="${item.url}" target="_blank" rel="noopener"
+       data-tags="${item.tags.join(',')}"
+       data-n="${item.n.toLowerCase()}"
+       data-d="${item.desc.toLowerCase()}">
+      <div class="card-bar" style="background:${item.bar}"></div>
+      <div class="card-top">
+        <div class="card-icon" style="background:${item.iconBg}">${item.icon}</div>
+        <span class="cost-pill ${COST_CLASS[item.cost]}">${item.cost}</span>
+      </div>
+      <div class="card-name">${item.n}</div>
+      <div class="card-desc">${item.desc}</div>
+      <div class="card-footer">
+        <span class="tag">${item.label}</span>
+        <span class="visit-link">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          visit
+        </span>
+      </div>
+    </a>`;
+}
+
+// Build all grids
+Object.keys(DATA).forEach(sec => {
+  document.getElementById('grid-'+sec).innerHTML = DATA[sec].map(buildCard).join('');
+});
+
+let activeF = 'all';
+
+function doFilter() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  let total = 0;
+
+  Object.keys(DATA).forEach(sec => {
+    const cards = document.querySelectorAll(`#grid-${sec} .card`);
+    let secVisible = 0;
+    cards.forEach(card => {
+      const mf = activeF === 'all' || card.dataset.tags.split(',').includes(activeF);
+      const ms = !q || card.dataset.n.includes(q) || card.dataset.d.includes(q);
+      const show = mf && ms;
+      card.classList.toggle('hidden', !show);
+      if (show) secVisible++;
+    });
+    total += secVisible;
+    const secEl = document.getElementById('sec-'+sec);
+    secEl.style.display = secVisible === 0 ? 'none' : '';
+    const scEl = document.getElementById('sc-'+sec);
+    if (scEl) scEl.textContent = secVisible + ' resource' + (secVisible !== 1 ? 's' : '');
+  });
+
+  document.getElementById('vis-count').textContent = total;
+  document.getElementById('empty-state').style.display = total === 0 ? 'flex' : 'none';
+}
+
+function setF(f, btn) {
+  activeF = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  doFilter();
+}
+</script>
+</body>
+</html>
